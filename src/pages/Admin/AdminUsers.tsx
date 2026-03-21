@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, Search, Users, Mail, X, Trash2, ShieldCheck } from 'lucide-react';
-import { adminApi } from '../api/adminApi';
-import type { UserDto } from '../types';
+import { adminApi } from '../../api/adminApi';
+import type { UserDto } from '../../types';
 import toast from 'react-hot-toast';
-import { useAdminTheme } from '../context/AdminThemeContext';
+import { useAdminTheme } from '../../context/AdminThemeContext';
 
 const ROLES = ['Admin', 'Member', 'YouthMember'];
 

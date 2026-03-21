@@ -4,10 +4,10 @@ import {
   ChevronLeft, ChevronRight, X, Phone, Clock,
   Tag, MessageSquare, ExternalLink, Inbox
 } from 'lucide-react';
-import { contactApi } from '../api/contactApi';
-import type { ContactDto } from '../types';
+import { contactApi } from '../../api/contactApi';
+import type { ContactDto } from '../../types';
 import toast from 'react-hot-toast';
-import { useAdminTheme } from '../context/AdminThemeContext';
+import { useAdminTheme } from '../../context/AdminThemeContext';
 
 const STATUS_OPTIONS = [
   { label: 'All Statuses', value: '' },

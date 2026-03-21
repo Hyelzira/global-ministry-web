@@ -132,6 +132,7 @@ export interface SermonDto {
   description: string;
   imageUrl: string | null;
   videoUrl: string | null;
+  audioUrl: string | null;
   sermonDate: string;
   isPublished: boolean;
   createdOn: string;
@@ -163,6 +164,7 @@ export interface EventDto {
   imageUrl: string | null;
   module: string;
   isCancelled: boolean;
+  acceptsRegistrations: boolean;
   acceptsDonations: boolean;
   donationLabel: string | null;
   createdOn: string;

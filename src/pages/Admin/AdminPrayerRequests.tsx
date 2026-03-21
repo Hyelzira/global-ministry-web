@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, Search, HandHeart, Check, X, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
-import { prayerApi } from '../api/prayerApi';
-import type { PrayerRequestDto } from '../types';
+import { prayerApi } from '../../api/prayerApi';
+import type { PrayerRequestDto } from '../../types';
 import toast from 'react-hot-toast';
-import { useAdminTheme } from '../context/AdminThemeContext';
+import { useAdminTheme } from '../../context/AdminThemeContext';
 
 const AdminPrayerRequests = () => {
   const { isDark } = useAdminTheme();

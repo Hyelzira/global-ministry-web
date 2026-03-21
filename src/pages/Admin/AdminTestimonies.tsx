@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, Search, Star, X, Check, Trash2, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
-import { testimonyApi } from '../api/testimonyApi';
-import type { TestimonyDto } from '../types';
+import { testimonyApi } from '../../api/testimonyApi';
+import type { TestimonyDto } from '../../types';
 import toast from 'react-hot-toast';
-import { useAdminTheme } from '../context/AdminThemeContext';
+import { useAdminTheme } from '../../context/AdminThemeContext';
 
 const STATUS_COLORS: Record<string, string> = {
   Pending:  'bg-amber-500/20 text-amber-600',

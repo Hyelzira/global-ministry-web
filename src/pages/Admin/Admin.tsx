@@ -8,8 +8,8 @@ import {
   Users, Megaphone, Calendar, HandHeart,
   Star, MessageSquare, BookOpen, RefreshCw, TrendingUp, Sun, Moon
 } from 'lucide-react';
-import { adminApi } from '../api/adminApi';
-import type { DashboardStatsDto } from '../types';
+import { adminApi } from '../../api/adminApi';
+import type { DashboardStatsDto } from '../../types';
 
 const chartDataSets = {
   Hour: [
@@ -239,12 +239,14 @@ const Admin = () => {
             color="bg-emerald-600/80"
             onClick={() => navigate('/admin/events')}
           />
+          {/* ✅ Sermons card — now clickable */}
           <StatCard
             label="Sermons"
             value={stats?.totalSermons ?? 0}
             sub={`${stats?.publishedSermons ?? 0} published · ${stats?.draftSermons ?? 0} drafts`}
             icon={<BookOpen size={18} className="text-white" />}
             color="bg-amber-600/80"
+            onClick={() => navigate('/admin/sermons')}
           />
         </div>
 
