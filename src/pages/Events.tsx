@@ -62,42 +62,42 @@ const Events: React.FC = () => {
     });
   };
 
- const handleRegister = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!selectedEvent) return;
-  setIsSubmitting(true);
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedEvent) return;
+    setIsSubmitting(true);
 
-  try {
-    const response = await fetch(
-      `http://localhost:5020/api/ministry/events/${selectedEvent.id}/register`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fullName: regForm.fullName,
-          email: regForm.email,
-          phoneNumber: regForm.phone || null
-        })
-      }
-    );
-
-    const data = await response.json();
-
-    if (data.isSuccess) {
-      toast.success(
-        `Registered! Check ${regForm.email} for your confirmation email. 📧`
+    try {
+      const response = await fetch(
+        `http://localhost:5020/api/ministry/events/${selectedEvent.id}/register`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fullName: regForm.fullName,
+            email: regForm.email,
+            phoneNumber: regForm.phone || null
+          })
+        }
       );
-      setSelectedEvent(null);
-      setRegForm({ fullName: '', email: '', phone: '' });
-    } else {
-      toast.error(data.message || 'Registration failed');
+
+      const data = await response.json();
+
+      if (data.isSuccess) {
+        toast.success(
+          `Registered! Check ${regForm.email} for your confirmation email. 📧`
+        );
+        setSelectedEvent(null);
+        setRegForm({ fullName: '', email: '', phone: '' });
+      } else {
+        toast.error(data.message || 'Registration failed');
+      }
+    } catch {
+      toast.error('Something went wrong. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
-  } catch {
-    toast.error('Something went wrong. Please try again.');
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
   const initiateDonation = async (method: 'paystack' | 'flutterwave') => {
     if (!donateEvent) return;
@@ -133,7 +133,7 @@ const Events: React.FC = () => {
     }
   };
 
-  // ── Reusable event card for upcoming + ongoing ──────────────────────────────
+  // ── Reusable event card ───────────────────────────────────────────────────
   const EventCard = ({ event, badge }: { event: EventDto; badge?: string }) => (
     <div
       key={event.id}
@@ -187,14 +187,19 @@ const Events: React.FC = () => {
 
         {!event.isCancelled && (
           <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => setSelectedEvent(event)}
-              className="group/btn inline-flex items-center gap-3 bg-gray-900 text-white px-8 py-4 text-sm font-bold uppercase tracking-widest hover:bg-fuchsia-600 transition-all duration-300"
-            >
-              Register Now
-              <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
-            </button>
 
+            {/* ✅ Register button — only if acceptsRegistrations */}
+            {event.acceptsRegistrations && (
+              <button
+                onClick={() => setSelectedEvent(event)}
+                className="group/btn inline-flex items-center gap-3 bg-gray-900 text-white px-8 py-4 text-sm font-bold uppercase tracking-widest hover:bg-fuchsia-600 transition-all duration-300"
+              >
+                Register Now
+                <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
+              </button>
+            )}
+
+            {/* ✅ Give button — only if acceptsDonations */}
             {event.acceptsDonations && (
               <button
                 onClick={() => {

@@ -9,6 +9,7 @@ export interface CreateEventDto {
   location: string;
   imageUrl?: string;
   module: string;
+  acceptsRegistrations: boolean;
   acceptsDonations: boolean;
   donationLabel?: string;
 }
@@ -21,6 +22,7 @@ export interface UpdateEventDto {
   location: string;
   imageUrl?: string;
   isCancelled: boolean;
+  acceptsRegistrations: boolean;
   acceptsDonations: boolean;
   donationLabel?: string;
 }

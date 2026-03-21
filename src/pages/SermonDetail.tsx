@@ -25,7 +25,6 @@ const SermonDetail: React.FC = () => {
         if (response.data.isSuccess && response.data.data) {
           setSermon(response.data.data);
 
-          // Fetch related sermons
           const allResponse = await sermonApi.getAll({ pageSize: 10 });
           if (allResponse.data.isSuccess && allResponse.data.data) {
             const others = allResponse.data.data.items
@@ -203,6 +202,8 @@ const SermonDetail: React.FC = () => {
                 <Download className="w-5 h-5 mr-3 text-fuchsia-400" /> Resources
               </h3>
               <div className="space-y-4">
+
+                {/* Sermon Notes — placeholder */}
                 <button className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-all">
                   <div className="flex items-center">
                     <div className="p-2 bg-fuchsia-500/20 rounded-lg mr-3">
@@ -214,18 +215,51 @@ const SermonDetail: React.FC = () => {
                     PDF
                   </span>
                 </button>
-                <button className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-all">
-                  <div className="flex items-center">
-                    <div className="p-2 bg-blue-500/20 rounded-lg mr-3">
-                      <Play className="w-4 h-4 text-blue-400" />
+
+                {/* ✅ Audio — real if available, disabled if not */}
+                {sermon.audioUrl ? (
+                  <div className="space-y-2">
+                    <a
+                      href={sermon.audioUrl}
+                      download
+                      className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-all"
+                    >
+                      <div className="flex items-center">
+                        <div className="p-2 bg-blue-500/20 rounded-lg mr-3">
+                          <Play className="w-4 h-4 text-blue-400" />
+                        </div>
+                        <span className="font-semibold text-sm">Download Audio</span>
+                      </div>
+                      <span className="text-[10px] bg-white/10 px-2 py-1 rounded font-bold uppercase">
+                        MP3
+                      </span>
+                    </a>
+                    {/* Inline audio player */}
+                    <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
+                      <p className="text-[10px] uppercase tracking-widest text-white/40 mb-2">
+                        Stream Audio
+                      </p>
+                      <audio controls className="w-full">
+                        <source src={sermon.audioUrl} />
+                      </audio>
                     </div>
-                    <span className="font-semibold text-sm">Download Audio</span>
                   </div>
-                  <span className="text-[10px] bg-white/10 px-2 py-1 rounded font-bold uppercase">
-                    MP3
-                  </span>
-                </button>
+                ) : (
+                  <div className="w-full flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10 opacity-40 cursor-not-allowed">
+                    <div className="flex items-center">
+                      <div className="p-2 bg-blue-500/20 rounded-lg mr-3">
+                        <Play className="w-4 h-4 text-blue-400" />
+                      </div>
+                      <span className="font-semibold text-sm">Audio Unavailable</span>
+                    </div>
+                    <span className="text-[10px] bg-white/10 px-2 py-1 rounded font-bold uppercase">
+                      MP3
+                    </span>
+                  </div>
+                )}
+
                 <hr className="border-white/5 my-2" />
+
                 <button className="w-full py-4 bg-fuchsia-600 hover:bg-fuchsia-500 text-white rounded-2xl font-bold transition-all flex items-center justify-center gap-2">
                   <Share2 className="w-4 h-4" /> Share This Message
                 </button>

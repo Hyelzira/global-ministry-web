@@ -7,10 +7,10 @@ import {
   announcementApi,
   type CreateAnnouncementDto,
   type UpdateAnnouncementDto
-} from '../api/announcementApi';
-import type { AnnouncementDto } from '../types';
+} from '../../api/announcementApi';
+import type { AnnouncementDto } from '../../types';
 import toast from 'react-hot-toast';
-import { useAdminTheme } from '../context/AdminThemeContext';
+import { useAdminTheme } from '../../context/AdminThemeContext';
 
 const MODULES    = ['Ministry', 'Youth'];
 const CATEGORIES = ['General', 'Service', 'Event', 'Outreach', 'Finance', 'Prayer'];

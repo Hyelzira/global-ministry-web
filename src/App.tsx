@@ -30,13 +30,14 @@ import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import ResendConfirmPage from './pages/auth/ResendConfirmPage';
 
 // ─── ADMIN PAGES ──────────────────────────────────────────────────────────────
-import Admin from './pages/Admin';
-import AdminContacts from './pages/AdminContacts';
-import AdminAnnouncements from './pages/AdminAnnouncements';
-import AdminEvents from './pages/AdminEvents';
-import AdminPrayerRequests from './pages/AdminPrayerRequests';
-import AdminTestimonies from './pages/AdminTestimonies';
-import AdminUsers from './pages/AdminUsers';
+import Admin from './pages/Admin/Admin';
+import AdminContacts from './pages/Admin/AdminContacts';
+import AdminAnnouncements from './pages/Admin/AdminAnnouncements';
+import AdminEvents from './pages/Admin/AdminEvents';
+import AdminSermons from './pages/Admin/AdminSermons';
+import AdminPrayerRequests from './pages/Admin/AdminPrayerRequests';
+import AdminTestimonies from './pages/Admin/AdminTestimonies';
+import AdminUsers from './pages/Admin/AdminUsers';
 
 // ─── SCROLL TO TOP ────────────────────────────────────────────────────────────
 const ScrollToTop = () => {
@@ -46,7 +47,6 @@ const ScrollToTop = () => {
 };
 
 // ─── LAYOUTS ──────────────────────────────────────────────────────────────────
-
 const PublicLayout = ({ children }: { children: React.ReactNode }) => (
   <>
     <Navbar />
@@ -92,7 +92,7 @@ const App: React.FC = () => {
         <div className="flex flex-col min-h-screen">
           <Routes>
 
-            {/* ── PUBLIC ROUTES ───────────────────────────────────────── */}
+            {/* ── PUBLIC ROUTES ─────────────────────────────────────── */}
             <Route path="/"
               element={<PublicLayout><Home /></PublicLayout>} />
             <Route path="/about"
@@ -109,8 +109,8 @@ const App: React.FC = () => {
               element={<PublicLayout><Give /></PublicLayout>} />
             <Route path="/contact"
               element={<PublicLayout><Contact /></PublicLayout>} />
-              <Route path="/announcements"
-  element={<PublicLayout><Announcements /></PublicLayout>} />
+            <Route path="/announcements"
+              element={<PublicLayout><Announcements /></PublicLayout>} />
             <Route path="/ministries/daughters-of-honour"
               element={<PublicLayout><DaughtersOfHonour /></PublicLayout>} />
             <Route path="/ministries/global-choir"
@@ -118,7 +118,7 @@ const App: React.FC = () => {
             <Route path="/ministries/home-of-love"
               element={<PublicLayout><HomeOfLove onBack={() => window.history.back()} /></PublicLayout>} />
 
-            {/* ── AUTH ROUTES ─────────────────────────────────────────── */}
+            {/* ── AUTH ROUTES ───────────────────────────────────────── */}
             <Route path="/login"
               element={<AuthLayout><LoginPage /></AuthLayout>} />
             <Route path="/register"
@@ -130,7 +130,7 @@ const App: React.FC = () => {
             <Route path="/resend-confirmation"
               element={<AuthLayout><ResendConfirmPage /></AuthLayout>} />
 
-            {/* ── PROTECTED ROUTES ────────────────────────────────────── */}
+            {/* ── PROTECTED ROUTES ──────────────────────────────────── */}
             <Route element={<ProtectedRoute />}>
               <Route
                 path="/youth"
@@ -144,7 +144,7 @@ const App: React.FC = () => {
               />
             </Route>
 
-            {/* ── ADMIN ROUTES ────────────────────────────────────────── */}
+            {/* ── ADMIN ROUTES ──────────────────────────────────────── */}
             <Route path="/admin" element={<AdminRoute />}>
               <Route index element={
                 <AdminLayout><Admin /></AdminLayout>
@@ -158,6 +158,9 @@ const App: React.FC = () => {
               <Route path="events" element={
                 <AdminLayout><AdminEvents /></AdminLayout>
               } />
+              <Route path="sermons" element={
+                <AdminLayout><AdminSermons /></AdminLayout>
+              } />
               <Route path="prayer-requests" element={
                 <AdminLayout><AdminPrayerRequests /></AdminLayout>
               } />
@@ -169,7 +172,7 @@ const App: React.FC = () => {
               } />
             </Route>
 
-            {/* ── 404 ─────────────────────────────────────────────────── */}
+            {/* ── 404 ───────────────────────────────────────────────── */}
             <Route path="*" element={<NotFoundPage />} />
 
           </Routes>
