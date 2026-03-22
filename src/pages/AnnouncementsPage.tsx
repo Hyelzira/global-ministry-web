@@ -1,26 +1,44 @@
-import React, { useState, useEffect } from 'react';
-import { Bell, Search, Calendar, Tag, ArrowRight, X } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Bell, Search, Calendar, Tag, ArrowRight, X, AlertCircle } from 'lucide-react';
 import { announcementApi } from '../api/announcementApi';
 import type { AnnouncementDto } from '../types';
+
+// --- Sub-components for better organization ---
+
+const SkeletonCard = () => (
+  <div className="animate-pulse border border-slate-100 rounded-xl p-6 bg-white">
+    <div className="flex justify-between mb-4">
+      <div className="h-4 bg-slate-200 rounded w-20" />
+      <div className="h-4 bg-slate-200 rounded w-24" />
+    </div>
+    <div className="h-6 bg-slate-200 rounded mb-3 w-full" />
+    <div className="space-y-2">
+      <div className="h-4 bg-slate-200 rounded w-full" />
+      <div className="h-4 bg-slate-200 rounded w-5/6" />
+    </div>
+  </div>
+);
 
 const AnnouncementsPage: React.FC = () => {
   const [announcements, setAnnouncements] = useState<AnnouncementDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedAnnouncement, setSelectedAnnouncement] =
-    useState<AnnouncementDto | null>(null);
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState<AnnouncementDto | null>(null);
   const [totalCount, setTotalCount] = useState(0);
   const [pageNumber, setPageNumber] = useState(1);
   const pageSize = 9;
 
-  const categories = [
-    ...new Set(announcements.map(a => a.category).filter(Boolean))
-  ];
+  // Memoize categories to prevent unnecessary recalculations
+  const categories = useMemo(() => {
+    return [...new Set(announcements.map(a => a.category).filter(Boolean))];
+  }, [announcements]);
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
       setIsLoading(true);
+      setError(null);
       try {
         const response = await announcementApi.getAll({
           pageNumber,
@@ -34,22 +52,22 @@ const AnnouncementsPage: React.FC = () => {
           setAnnouncements(response.data.data.items);
           setTotalCount(response.data.data.totalCount);
         }
-      } catch (error) {
-        console.error('Failed to fetch announcements:', error);
+      } catch (err) {
+        setError('We couldn’t load the announcements. Please try again later.');
+        console.error('Fetch error:', err);
       } finally {
         setIsLoading(false);
       }
     };
 
-    // Debounce search
-    const timeout = setTimeout(fetchAnnouncements, 300);
+    const timeout = setTimeout(fetchAnnouncements, 400); // Slightly longer debounce for better UX
     return () => clearTimeout(timeout);
   }, [pageNumber, searchQuery, selectedCategory]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'long',
+      month: 'short',
       day: 'numeric'
     });
   };
@@ -57,262 +75,163 @@ const AnnouncementsPage: React.FC = () => {
   const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
-    <div className="bg-white min-h-screen">
-
-      {/* Hero */}
-      <div className="bg-[#0a0a0a] py-24 md:py-32 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-10 left-10 w-32 h-32 border border-white rounded-full" />
-          <div className="absolute bottom-10 right-10 w-64 h-64 border border-white rounded-full" />
-        </div>
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center relative z-10">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Bell className="w-5 h-5 text-fuchsia-500" />
-            <h2 className="text-fuchsia-500 uppercase tracking-[0.3em] text-sm font-bold">
-              Stay Updated
-            </h2>
+    <div className="bg-[#fafafa] min-h-screen font-sans selection:bg-fuchsia-100">
+      
+      {/* Hero Section */}
+      <section className="bg-[#0a0a0a] pt-32 pb-20 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_-20%,#4a044e,transparent)] opacity-40" />
+        <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/20 mb-6">
+            <Bell className="w-4 h-4 text-fuchsia-400" />
+            <span className="text-fuchsia-400 uppercase tracking-widest text-[10px] font-bold">Latest Updates</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-serif text-white mb-6 tracking-tight">
+          
+          <h1 className="text-5xl md:text-7xl font-serif text-white mb-8 tracking-tight">
             Announcements
           </h1>
-          <div className="w-20 h-1 bg-fuchsia-500 mx-auto mb-10" />
 
-          {/* Search Bar */}
-          <div className="max-w-xl mx-auto">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Search announcements..."
-                value={searchQuery}
-                onChange={e => {
-                  setSearchQuery(e.target.value);
-                  setPageNumber(1);
-                }}
-                className="w-full bg-white/10 backdrop-blur border border-white/20 text-white placeholder:text-white/40 pl-12 pr-4 py-3 rounded-lg outline-none focus:border-fuchsia-500 transition-all"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
+          <div className="max-w-2xl mx-auto relative group">
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-white/30 w-5 h-5 group-focus-within:text-fuchsia-400 transition-colors" />
+            <input
+              type="text"
+              placeholder="Search by title or keyword..."
+              value={searchQuery}
+              onChange={e => { setSearchQuery(e.target.value); setPageNumber(1); }}
+              className="w-full bg-white/5 backdrop-blur-md border border-white/10 text-white placeholder:text-white/30 pl-14 pr-12 py-4 rounded-2xl outline-none focus:ring-2 focus:ring-fuchsia-500/50 focus:border-fuchsia-500/50 transition-all shadow-2xl"
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Category Filter */}
-      {categories.length > 0 && (
-        <div className="border-b border-slate-100 bg-slate-50">
-          <div className="max-w-7xl mx-auto px-6 py-4 flex items-center gap-3 overflow-x-auto">
+      {/* Main Content Area */}
+      <main className="max-w-7xl mx-auto px-6 -mt-8 relative z-20 pb-20">
+        
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-3 mb-12 bg-white p-2 rounded-2xl shadow-sm border border-slate-100 overflow-x-auto scrollbar-hide">
+          <button
+            onClick={() => { setSelectedCategory(''); setPageNumber(1); }}
+            className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+              selectedCategory === '' ? 'bg-fuchsia-600 text-white shadow-md shadow-fuchsia-200' : 'text-slate-500 hover:bg-slate-50'
+            }`}
+          >
+            All Updates
+          </button>
+          {categories.map(cat => (
             <button
-              onClick={() => { setSelectedCategory(''); setPageNumber(1); }}
-              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
-                selectedCategory === ''
-                  ? 'bg-fuchsia-600 text-white'
-                  : 'bg-white text-slate-600 border border-slate-200 hover:border-fuchsia-400'
+              key={cat}
+              onClick={() => { setSelectedCategory(cat); setPageNumber(1); }}
+              className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                selectedCategory === cat ? 'bg-fuchsia-600 text-white shadow-md shadow-fuchsia-200' : 'text-slate-500 hover:bg-slate-50'
               }`}
             >
-              All
+              {cat}
             </button>
-            {categories.map(cat => (
-              <button
-                key={cat}
-                onClick={() => { setSelectedCategory(cat); setPageNumber(1); }}
-                className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
-                  selectedCategory === cat
-                    ? 'bg-fuchsia-600 text-white'
-                    : 'bg-white text-slate-600 border border-slate-200 hover:border-fuchsia-400'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+          ))}
         </div>
-      )}
 
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-6 py-16">
-
-        {/* Loading */}
-        {isLoading && (
+        {/* Status Handling */}
+        {error ? (
+          <div className="text-center py-20 bg-white rounded-3xl border border-red-50">
+            <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-slate-800 mb-2">Something went wrong</h3>
+            <p className="text-slate-500 mb-6">{error}</p>
+            <button onClick={() => window.location.reload()} className="px-6 py-2 bg-slate-900 text-white rounded-lg font-bold text-sm uppercase tracking-widest">Retry</button>
+          </div>
+        ) : isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3, 4, 5, 6].map(i => (
-              <div key={i} className="animate-pulse">
-                <div className="h-2 bg-slate-200 rounded mb-4 w-1/4" />
-                <div className="h-6 bg-slate-200 rounded mb-3" />
-                <div className="h-4 bg-slate-200 rounded mb-2 w-3/4" />
-                <div className="h-4 bg-slate-200 rounded w-1/2" />
-              </div>
+            {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
+          </div>
+        ) : announcements.length === 0 ? (
+          <div className="text-center py-32 bg-white rounded-3xl border border-slate-100 border-dashed">
+            <Search className="w-16 h-16 text-slate-200 mx-auto mb-4" />
+            <p className="text-slate-400 text-lg">No announcements found matching your criteria.</p>
+          </div>
+        ) : (
+          /* The Grid */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {announcements.map(item => (
+              <article 
+                key={item.id}
+                onClick={() => setSelectedAnnouncement(item)}
+                className="group bg-white border border-slate-100 rounded-2xl p-8 hover:border-fuchsia-300 hover:shadow-[0_20px_50px_rgba(217,70,239,0.05)] transition-all duration-500 cursor-pointer flex flex-col h-full"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <span className="px-3 py-1 bg-fuchsia-50 text-fuchsia-600 rounded-lg text-[10px] font-black uppercase tracking-widest">
+                    {item.category || 'General'}
+                  </span>
+                  <span className="text-[11px] font-medium text-slate-400 uppercase tracking-tighter">
+                    {formatDate(item.createdOn)}
+                  </span>
+                </div>
+                <h3 className="text-2xl font-serif font-bold text-slate-900 mb-4 group-hover:text-fuchsia-600 transition-colors leading-snug">
+                  {item.title}
+                </h3>
+                <p className="text-slate-500 text-sm leading-relaxed line-clamp-3 mb-8 flex-grow">
+                  {item.content}
+                </p>
+                <div className="flex items-center gap-2 text-fuchsia-600 text-xs font-black uppercase tracking-[0.2em] group-hover:gap-4 transition-all">
+                  Read Announcement <ArrowRight className="w-4 h-4" />
+                </div>
+              </article>
             ))}
           </div>
         )}
 
-        {/* Empty State */}
-        {!isLoading && announcements.length === 0 && (
-          <div className="text-center py-24 border-2 border-dashed border-slate-200 rounded-2xl">
-            <Bell className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-2xl font-serif text-slate-400 mb-2">
-              No Announcements
-            </h3>
-            <p className="text-slate-400">
-              {searchQuery
-                ? 'No announcements match your search.'
-                : 'Check back soon for updates.'}
-            </p>
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="mt-4 text-fuchsia-600 text-sm font-bold uppercase tracking-widest"
-              >
-                Clear Search
-              </button>
-            )}
+        {/* Improved Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-3 mt-20">
+            <button 
+              disabled={pageNumber === 1}
+              onClick={() => setPageNumber(prev => prev - 1)}
+              className="p-3 rounded-xl border border-slate-200 hover:bg-white disabled:opacity-30 transition-all"
+            >
+              <ArrowRight className="w-5 h-5 rotate-180" />
+            </button>
+            <span className="text-sm font-bold text-slate-400 mx-4">
+              Page <span className="text-slate-900">{pageNumber}</span> of {totalPages}
+            </span>
+            <button 
+              disabled={pageNumber === totalPages}
+              onClick={() => setPageNumber(prev => prev + 1)}
+              className="p-3 rounded-xl border border-slate-200 hover:bg-white disabled:opacity-30 transition-all"
+            >
+              <ArrowRight className="w-5 h-5" />
+            </button>
           </div>
         )}
+      </main>
 
-        {/* Announcements Grid */}
-        {!isLoading && announcements.length > 0 && (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {announcements.map(announcement => (
-                <div
-                  key={announcement.id}
-                  onClick={() => setSelectedAnnouncement(announcement)}
-                  className="group cursor-pointer border border-slate-100 rounded-xl p-6 hover:border-fuchsia-200 hover:shadow-lg transition-all duration-300"
-                >
-                  {/* Category + Date */}
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="flex items-center gap-1 text-xs font-bold text-fuchsia-600 uppercase tracking-widest">
-                      <Tag className="w-3 h-3" />
-                      {announcement.category || 'General'}
-                    </span>
-                    <span className="flex items-center gap-1 text-xs text-slate-400">
-                      <Calendar className="w-3 h-3" />
-                      {formatDate(announcement.createdOn)}
-                    </span>
-                  </div>
-
-                  {/* Title */}
-                  <h3 className="text-xl font-serif font-medium text-slate-900 mb-3 group-hover:text-fuchsia-700 transition-colors line-clamp-2">
-                    {announcement.title}
-                  </h3>
-
-                  {/* Content Preview */}
-                  <p className="text-slate-500 text-sm leading-relaxed line-clamp-3 mb-4">
-                    {announcement.content}
-                  </p>
-
-                  {/* Read More */}
-                  <div className="flex items-center gap-2 text-fuchsia-600 text-sm font-bold uppercase tracking-widest group-hover:gap-3 transition-all">
-                    Read More
-                    <ArrowRight className="w-4 h-4" />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-16">
-                <button
-                  onClick={() => setPageNumber(p => Math.max(1, p - 1))}
-                  disabled={pageNumber === 1}
-                  className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-semibold text-slate-600 hover:border-fuchsia-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                >
-                  Previous
-                </button>
-
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter(p => p === 1 || p === totalPages ||
-                    Math.abs(p - pageNumber) <= 1)
-                  .map((p, idx, arr) => (
-                    <React.Fragment key={p}>
-                      {idx > 0 && arr[idx - 1] !== p - 1 && (
-                        <span className="text-slate-400">...</span>
-                      )}
-                      <button
-                        onClick={() => setPageNumber(p)}
-                        className={`w-10 h-10 rounded-lg text-sm font-bold transition-all ${
-                          pageNumber === p
-                            ? 'bg-fuchsia-600 text-white'
-                            : 'border border-slate-200 text-slate-600 hover:border-fuchsia-400'
-                        }`}
-                      >
-                        {p}
-                      </button>
-                    </React.Fragment>
-                  ))
-                }
-
-                <button
-                  onClick={() => setPageNumber(p => Math.min(totalPages, p + 1))}
-                  disabled={pageNumber === totalPages}
-                  className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-semibold text-slate-600 hover:border-fuchsia-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                >
-                  Next
-                </button>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* ── ANNOUNCEMENT DETAIL MODAL ─────────────────────────────────── */}
+      {/* Modern Detail Modal */}
       {selectedAnnouncement && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8">
-          <div
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={() => setSelectedAnnouncement(null)}
-          />
-          <div className="relative bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-
-            {/* Modal Header */}
-            <div className="p-8 border-b border-slate-100">
-              <button
-                onClick={() => setSelectedAnnouncement(null)}
-                className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
-
-              <div className="flex items-center gap-3 mb-4">
-                <span className="flex items-center gap-1 text-xs font-bold text-fuchsia-600 uppercase tracking-widest">
-                  <Tag className="w-3 h-3" />
-                  {selectedAnnouncement.category || 'General'}
-                </span>
-                <span className="text-slate-300">•</span>
-                <span className="flex items-center gap-1 text-xs text-slate-400">
-                  <Calendar className="w-3 h-3" />
-                  {formatDate(selectedAnnouncement.createdOn)}
-                </span>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setSelectedAnnouncement(null)} />
+          <div className="relative bg-white w-full max-w-2xl rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <button onClick={() => setSelectedAnnouncement(null)} className="absolute top-6 right-6 p-2 rounded-full bg-slate-50 text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all">
+              <X className="w-5 h-5" />
+            </button>
+            <div className="p-10 pt-16">
+              <div className="flex items-center gap-3 mb-6">
+                <Tag className="w-4 h-4 text-fuchsia-500" />
+                <span className="text-xs font-black text-fuchsia-600 uppercase tracking-widest">{selectedAnnouncement.category || 'General'}</span>
+                <span className="w-1 h-1 rounded-full bg-slate-200" />
+                <Calendar className="w-4 h-4 text-slate-400" />
+                <span className="text-xs font-bold text-slate-400">{formatDate(selectedAnnouncement.createdOn)}</span>
               </div>
-
-              <h2 className="text-2xl md:text-3xl font-serif font-bold text-slate-900">
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-slate-900 mb-8 leading-tight">
                 {selectedAnnouncement.title}
               </h2>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-8 overflow-y-auto flex-1">
-              <div className="prose prose-slate max-w-none">
+              <div className="prose prose-fuchsia max-w-none">
                 <p className="text-slate-600 leading-relaxed text-lg whitespace-pre-wrap">
                   {selectedAnnouncement.content}
                 </p>
               </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="p-6 border-t border-slate-100 bg-slate-50">
-              <button
-                onClick={() => setSelectedAnnouncement(null)}
-                className="w-full py-3 bg-slate-900 text-white font-bold uppercase tracking-widest hover:bg-fuchsia-600 transition-colors rounded-lg"
-              >
-                Close
+              <button onClick={() => setSelectedAnnouncement(null)} className="mt-12 w-full py-4 bg-slate-900 text-white rounded-2xl font-bold uppercase tracking-widest hover:bg-fuchsia-600 hover:shadow-xl hover:shadow-fuchsia-200 transition-all transform active:scale-[0.98]">
+                Close Announcement
               </button>
             </div>
           </div>

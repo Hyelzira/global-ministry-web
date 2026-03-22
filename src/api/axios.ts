@@ -5,9 +5,15 @@ import axios, {
 } from 'axios';
 import { storage } from '../utils/storage';
 
+// ✅ Change this one URL and everything updates automatically
+const BASE_URL = 'https://unmaterialistic-jakob-likeliest.ngrok-free.dev';
+
 const api = axios.create({
-  baseURL: 'http://localhost:5020',
-  headers: { 'Content-Type': 'application/json' },
+  baseURL: BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true', // ✅ Skip ngrok browser warning page
+  },
 });
 
 // Attach JWT to every request automatically
@@ -35,7 +41,7 @@ api.interceptors.response.use(
 
         if (user && refreshToken) {
           const res = await axios.post<{ data: string }>(
-            'http://localhost:5020/api/auth/refresh-token',
+            `${BASE_URL}/api/auth/refresh-token`,  // ✅ uses constant
             { email: user.email, refreshToken }
           );
 
