@@ -2,7 +2,7 @@ import { useState } from 'react';
 import {
   ArrowRight, ArrowLeft, Check, ShieldCheck,
   ChevronRight, CreditCard, Building2, Smartphone, Globe, Hash,
-  Heart, Zap, Sprout, Landmark, Gift, Info
+  Heart, Sprout, Landmark, Info
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { donationApi } from '../api/donationApi';
@@ -10,11 +10,8 @@ import { donationApi } from '../api/donationApi';
 // ── Data ─────────────────────────────────────────────────────────────────────
 
 const CATEGORIES = [
-  { label: 'Tithe', icon: <Landmark className="text-amber-600" />, desc: 'Your tenth returned to God' },
-  { label: 'Offering', icon: <Gift className="text-rose-500" />, desc: 'A freewill gift of worship' },
+  { label: 'Tithe and Offering', icon: <Landmark className="text-amber-600" />, desc: 'Your tenth returned to God and thanksgiving to him' },
   { label: 'Building Projects', icon: <Building2 className="text-blue-600" />, desc: "Expanding God's house" },
-  { label: 'Global Outreach', icon: <Globe className="text-emerald-600" />, desc: 'Taking the gospel worldwide' },
-  { label: 'Youth Ministry', icon: <Zap className="text-yellow-500" />, desc: 'Raising the next generation' },
   { label: 'Children Ministry', icon: <Sprout className="text-green-500" />, desc: 'Planting seeds in young hearts' },
   { label: 'Community Outreach', icon: <Heart className="text-red-500" />, desc: 'Serving our neighbours' },
 ];
@@ -42,9 +39,9 @@ const REGIONS = [
 
 const PRESET_AMOUNTS: Record<string, number[]> = {
   NGN: [5000, 10000, 25000, 50000, 100000, 250000],
-  USD: [10, 25, 50, 100, 250, 500],
-  GBP: [10, 25, 50, 100, 250, 500],
-  EUR: [10, 25, 50, 100, 250, 500],
+  USD: [10, 25, 50, 100, 250, 500,1000,5000],
+  GBP: [10, 25, 50, 100, 250, 500,1000,5000],
+  EUR: [10, 25, 50, 100, 250, 500,1000,5000],
   default: [20, 50, 100, 250, 500, 1000],
 };
 
@@ -64,7 +61,7 @@ const PAYMENT_METHODS: PaymentMethod[] = [
     icon: <CreditCard size={20} className="text-slate-700" />,
     tags: ['Visa', 'Mastercard', 'Verve'],
     gateway: 'paystack',
-    currencies: ['NGN', 'GHS', 'KES', 'ZAR', 'UGX', 'TZS', 'RWF'],
+    currencies: ['NGN', 'GHS', 'KES', 'ZAR', 'UGX', 'TZS', 'RWF','CHF','JPY'],
   },
   {
     id: 'bank_transfer', label: 'Bank Transfer', desc: 'Instant transfer from your bank app',
