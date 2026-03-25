@@ -7,6 +7,7 @@ import AdminRoute from './components/guards/AdminRoute';
 import AdminLayout from './components/AdminLayout';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import BookStore from './components/BookStore';
 
 // ─── MINISTRY PAGES ───────────────────────────────────────────────────────────
 import Home from './pages/Home';
@@ -97,6 +98,11 @@ const App: React.FC = () => {
               element={<PublicLayout><Home /></PublicLayout>} />
             <Route path="/about"
               element={<PublicLayout><About /></PublicLayout>} />
+            
+            {/* MERGED: BookStore Route added below */}
+            <Route path="/books"
+              element={<PublicLayout><BookStore /></PublicLayout>} />
+
             <Route path="/sermons"
               element={<PublicLayout><Sermons /></PublicLayout>} />
             <Route path="/sermons/:id"
