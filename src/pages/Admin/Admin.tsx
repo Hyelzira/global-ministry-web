@@ -1,72 +1,80 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
+  ResponsiveContainer, LineChart, Line,
+  XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts";
-
-import {
-  Home,
-  Users,
-  MessageSquare,
-  HeartHandshake,
-  Sparkles,
-  TrendingUp,
-} from "lucide-react";
-
-/* =====================================================
-   ADMIN DASHBOARD
-===================================================== */
+import { Home, Users, MessageSquare, HeartHandshake, Sparkles, TrendingUp } from "lucide-react";
+import { adminApi } from "../../api/adminApi";
+import type { DashboardStatsDto } from "../../types";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
 
-  /* ---------------- STATE ---------------- */
+  // ── STATE ──────────────────────────────────────────────────
+  const [stats, setStats] = useState<DashboardStatsDto | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [stats] = useState({
-    users: 1240,
-    messages: 328,
-    prayers: 112,
-    testimonies: 76,
-  });
+  const [chartData] = useState([
+    { day: "Mon", activity: 20 },
+    { day: "Tue", activity: 35 },
+    { day: "Wed", activity: 28 },
+    { day: "Thu", activity: 50 },
+    { day: "Fri", activity: 44 },
+    { day: "Sat", activity: 60 },
+    { day: "Sun", activity: 75 },
+  ]);
 
-  const [chartData, setChartData] = useState<{ day: string; activity: number }[]>([]);
-
-  /* ---------------- FETCH DATA (MOCK) ---------------- */
-
+  // ── FETCH REAL DATA ────────────────────────────────────────
   useEffect(() => {
-    // Replace later with API/Firebase call
-    setChartData([
-      { day: "Mon", activity: 20 },
-      { day: "Tue", activity: 35 },
-      { day: "Wed", activity: 28 },
-      { day: "Thu", activity: 50 },
-      { day: "Fri", activity: 44 },
-      { day: "Sat", activity: 60 },
-      { day: "Sun", activity: 75 },
-    ]);
+    const fetchStats = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const res = await adminApi.getDashboardStats();
+        if (res.data.isSuccess && res.data.data) {
+          setStats(res.data.data);
+        } else {
+          setError("Failed to load dashboard stats.");
+        }
+      } catch (err) {
+        setError("Could not reach the server. Check your connection.");
+        console.error("Dashboard fetch error:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStats();
   }, []);
 
-  /* ---------------- COMPONENTS ---------------- */
-
-  const StatCard = ({ icon: Icon, title, value, growth }: { icon: React.ComponentType<{ className: string; size: number }>; title: string; value: number; growth: string }) => (
+  // ── COMPONENTS ─────────────────────────────────────────────
+  const StatCard = ({
+    icon: Icon, title, value, growth,
+  }: {
+    icon: React.ComponentType<{ className: string; size: number }>;
+    title: string;
+    value: number | undefined;
+    growth: string;
+  }) => (
     <div className="bg-white border rounded-2xl p-5 shadow-sm hover:shadow-md transition">
       <div className="flex justify-between items-center">
         <div>
           <p className="text-gray-500 text-sm">{title}</p>
-          <h2 className="text-2xl font-bold mt-1">{value}</h2>
+
+          {/* Show skeleton shimmer while loading */}
+          {isLoading ? (
+            <div className="h-8 w-20 bg-gray-200 animate-pulse rounded mt-1" />
+          ) : (
+            <h2 className="text-2xl font-bold mt-1">{value ?? 0}</h2>
+          )}
 
           <div className="flex items-center gap-1 text-green-600 text-xs mt-1">
             <TrendingUp size={14} />
             {growth}
           </div>
         </div>
-
         <div className="bg-indigo-50 p-3 rounded-xl">
           <Icon className="text-indigo-600" size={22} />
         </div>
@@ -74,33 +82,37 @@ export default function AdminDashboard() {
     </div>
   );
 
-  const SideStat = ({ icon: Icon, label, value, color }: { icon: React.ComponentType<{ className: string }>; label: string; value: number; color: string }) => (
+  const SideStat = ({
+    icon: Icon, label, value, color,
+  }: {
+    icon: React.ComponentType<{ className: string }>;
+    label: string;
+    value: number | undefined;
+    color: string;
+  }) => (
     <div className="flex justify-between items-center bg-gray-50 p-4 rounded-xl">
       <div className="flex items-center gap-3">
         <Icon className={color} />
         <span className="font-medium">{label}</span>
       </div>
-
-      <span className="text-xl font-bold">{value}</span>
+      {isLoading ? (
+        <div className="h-6 w-10 bg-gray-200 animate-pulse rounded" />
+      ) : (
+        <span className="text-xl font-bold">{value ?? 0}</span>
+      )}
     </div>
   );
 
-  /* ---------------- UI ---------------- */
-
+  // ── UI ─────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-gray-100 p-6">
-      {/* ================= HEADER ================= */}
+
+      {/* HEADER */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">
-            Admin Dashboard
-          </h1>
-          <p className="text-gray-500">
-            Monitor platform activity & engagement
-          </p>
+          <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
+          <p className="text-gray-500">Monitor platform activity & engagement</p>
         </div>
-
-        {/* BACK TO HOME */}
         <button
           onClick={() => navigate("/")}
           className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl shadow hover:bg-indigo-700 transition"
@@ -110,98 +122,108 @@ export default function AdminDashboard() {
         </button>
       </div>
 
-      {/* ================= KPI CARDS ================= */}
+      {/* ERROR BANNER */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+          ⚠️ {error}
+        </div>
+      )}
+
+      {/* KPI CARDS — now using real backend fields */}
       <div className="grid md:grid-cols-4 gap-6 mb-8">
         <StatCard
           icon={Users}
           title="Total Users"
-          value={stats.users}
+          value={stats?.totalUsers}
           growth="+12% this month"
         />
-
         <StatCard
           icon={MessageSquare}
-          title="Messages"
-          value={stats.messages}
+          title="Contacts"
+          value={stats?.totalContacts}
           growth="+8% engagement"
         />
-
         <StatCard
           icon={HeartHandshake}
           title="Prayer Requests"
-          value={stats.prayers}
+          value={stats?.totalPrayerRequests}
           growth="+5% increase"
         />
-
         <StatCard
           icon={Sparkles}
           title="Testimonies"
-          value={stats.testimonies}
+          value={stats?.totalTestimonies}
           growth="+18% growth"
         />
       </div>
 
-      {/* ================= GRAPH + SIDE PANEL ================= */}
+      {/* GRAPH + SIDE PANEL */}
       <div className="grid lg:grid-cols-3 gap-6">
+
         {/* GRAPH */}
         <div className="lg:col-span-2 bg-white border rounded-2xl shadow-sm p-6">
-          <h2 className="text-lg font-semibold mb-4">
-            Weekly Activity Overview
-          </h2>
-
+          <h2 className="text-lg font-semibold mb-4">Weekly Activity Overview</h2>
           <ResponsiveContainer width="100%" height={320}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="day" />
               <YAxis />
               <Tooltip />
-              <Line
-                type="monotone"
-                dataKey="activity"
-                stroke="#4f46e5"
-                strokeWidth={3}
-              />
+              <Line type="monotone" dataKey="activity" stroke="#4f46e5" strokeWidth={3} />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
         {/* SIDE STATISTICS */}
         <div className="bg-white border rounded-2xl shadow-sm p-6 flex flex-col gap-6">
-          <h2 className="text-lg font-semibold">
-            Live Statistics
-          </h2>
+          <h2 className="text-lg font-semibold">Live Statistics</h2>
 
           <SideStat
             icon={MessageSquare}
-            label="Messages"
-            value={stats.messages}
+            label="Contacts"
+            value={stats?.totalContacts}
             color="text-indigo-600"
           />
-
           <SideStat
             icon={HeartHandshake}
             label="Prayer Requests"
-            value={stats.prayers}
+            value={stats?.totalPrayerRequests}
             color="text-pink-600"
           />
-
           <SideStat
             icon={Sparkles}
             label="Testimonies"
-            value={stats.testimonies}
+            value={stats?.totalTestimonies}
             color="text-yellow-500"
           />
 
-          {/* Insight Card */}
-          <div className="bg-indigo-50 rounded-xl p-4 mt-auto">
-            <p className="text-indigo-700 font-semibold text-sm">
-              Platform Insight
-            </p>
+          {/* Extra stats since you have them */}
+          {!isLoading && stats && (
+            <div className="grid grid-cols-2 gap-2 text-center text-xs text-gray-500 mt-2">
+              <div className="bg-gray-50 rounded-xl p-2">
+                <p className="text-lg font-bold text-gray-800">{stats.totalEvents}</p>
+                <p>Events</p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-2">
+                <p className="text-lg font-bold text-gray-800">{stats.totalSermons}</p>
+                <p>Sermons</p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-2">
+                <p className="text-lg font-bold text-gray-800">{stats.totalAnnouncements}</p>
+                <p>Announcements</p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-2">
+                <p className="text-lg font-bold text-gray-800">{stats.pendingPrayerRequests}</p>
+                <p>Pending Prayers</p>
+              </div>
+            </div>
+          )}
 
+          <div className="bg-indigo-50 rounded-xl p-4 mt-auto">
+            <p className="text-indigo-700 font-semibold text-sm">Platform Insight</p>
             <p className="text-gray-600 text-sm mt-2">
-              Community engagement is growing steadily. Prayer
-              requests and testimonies indicate increasing
-              participation this week.
+              Community engagement is growing steadily. Prayer requests and
+              testimonies indicate increasing participation this week.
             </p>
           </div>
         </div>

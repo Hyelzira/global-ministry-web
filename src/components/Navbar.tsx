@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink, Link } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import {
   Menu, X, Heart, Globe, Play, Calendar,
-  Bell, MessageSquare, UserCircle, ShieldCheck, BookOpen // Added BookOpen icon
+  Bell, MessageSquare, UserCircle, ShieldCheck, BookOpen
 } from 'lucide-react';
 import { NAV_LINKS } from '../constants';
 import logo from '../assets/flames.jpg';
@@ -12,6 +12,7 @@ const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { isAuthenticated, isAdmin, user, logout } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -19,16 +20,25 @@ const Navbar: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // If not logged in, redirect to login with a return path
+  const handleGiveClick = () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: '/give' } });
+    } else {
+      navigate('/give');
+    }
+  };
+
   const getIcon = (name: string) => {
     switch (name.toLowerCase()) {
-      case 'about': return <Globe className="w-6 h-6" />;
-      case 'sermons': return <Play className="w-6 h-6" />;
-      case 'events': return <Calendar className="w-6 h-6" />;
-      case 'books': return <BookOpen className="w-6 h-6" />; // Added case for books
+      case 'about':         return <Globe className="w-6 h-6" />;
+      case 'sermons':       return <Play className="w-6 h-6" />;
+      case 'events':        return <Calendar className="w-6 h-6" />;
+      case 'books':         return <BookOpen className="w-6 h-6" />;
       case 'announcements':
-      case 'news': return <Bell className="w-6 h-6" />;
-      case 'community': return <MessageSquare className="w-6 h-6" />;
-      default: return <Globe className="w-6 h-6" />;
+      case 'news':          return <Bell className="w-6 h-6" />;
+      case 'community':     return <MessageSquare className="w-6 h-6" />;
+      default:              return <Globe className="w-6 h-6" />;
     }
   };
 
@@ -61,9 +71,7 @@ const Navbar: React.FC = () => {
                 to={link.path}
                 className={({ isActive }) =>
                   `text-[10px] font-black uppercase tracking-widest transition-colors whitespace-nowrap ${
-                    isActive
-                      ? 'text-fuchsia-500'
-                      : 'text-gray-900 hover:text-amber-600'
+                    isActive ? 'text-fuchsia-500' : 'text-gray-900 hover:text-amber-600'
                   }`
                 }
               >
@@ -71,7 +79,6 @@ const Navbar: React.FC = () => {
               </NavLink>
             ))}
 
-            {/* Added: Book Store Link */}
             <NavLink
               to="/books"
               className={({ isActive }) =>
@@ -87,14 +94,21 @@ const Navbar: React.FC = () => {
               to="/announcements"
               className={({ isActive }) =>
                 `text-[10px] font-black uppercase tracking-widest transition-colors whitespace-nowrap ${
-                  isActive
-                    ? 'text-fuchsia-500'
-                    : 'text-gray-900 hover:text-amber-600'
+                  isActive ? 'text-fuchsia-500' : 'text-gray-900 hover:text-amber-600'
                 }`
               }
             >
               News
             </NavLink>
+
+            {/* ── GIVE — always visible, lives in the nav, not in auth ── */}
+            <button
+              onClick={handleGiveClick}
+              className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-fuchsia-600 hover:text-fuchsia-800 transition-colors whitespace-nowrap border-b-2 border-fuchsia-300 hover:border-fuchsia-600 pb-0.5"
+            >
+              <Heart className="w-3 h-3 fill-fuchsia-500 text-fuchsia-500" />
+              Give
+            </button>
           </div>
 
           {/* ── AUTH BUTTONS (desktop) ───────────────────────────────── */}
@@ -133,12 +147,6 @@ const Navbar: React.FC = () => {
                 >
                   Register
                 </Link>
-                <Link
-                  to="/give"
-                  className="bg-fuchsia-600 text-white px-4 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-fuchsia-700 transition-all rounded-sm whitespace-nowrap"
-                >
-                  Give
-                </Link>
               </>
             )}
           </div>
@@ -152,7 +160,6 @@ const Navbar: React.FC = () => {
               <Menu size={25} />
             </button>
           </div>
-
         </div>
       </div>
 
@@ -234,18 +241,19 @@ const Navbar: React.FC = () => {
                     Register
                   </span>
                 </Link>
-                <Link
-                  to="/give"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-4 p-5 border-b border-white/10 hover:bg-white/5"
-                >
-                  <Heart className="w-5 h-5 text-red-400 fill-red-400" />
-                  <span className="text-white font-bold uppercase tracking-[0.2em] text-[10px]">
-                    Donate Now
-                  </span>
-                </Link>
               </>
             )}
+
+            {/* Give — always in mobile drawer regardless of auth state */}
+            <button
+              onClick={() => { setIsOpen(false); handleGiveClick(); }}
+              className="flex items-center gap-4 p-5 border-b border-white/10 hover:bg-white/5 w-full text-left"
+            >
+              <Heart className="w-5 h-5 text-red-400 fill-red-400" />
+              <span className="text-white font-bold uppercase tracking-[0.2em] text-[10px]">
+                Give / Donate
+              </span>
+            </button>
           </div>
 
           {/* Mobile Nav Links */}
@@ -264,7 +272,6 @@ const Navbar: React.FC = () => {
               </Link>
             ))}
 
-            {/* Added: Book Store for mobile */}
             <Link
               to="/books"
               onClick={() => setIsOpen(false)}

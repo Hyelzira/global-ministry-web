@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
-  Calendar, Tag, Share2, Download, FileText,
-  ArrowLeft, Play, Clock, ChevronRight, Music
+  Calendar, Tag, Share2, Download,
+  ArrowLeft, Play, Clock, ChevronRight, Music,
+  Maximize2, Minimize2, X
 } from 'lucide-react';
 import { sermonApi } from '../api/sermonApi';
 import type { SermonDto } from '../types';
@@ -15,6 +16,11 @@ const SermonDetail: React.FC = () => {
   const [sermon, setSermon] = useState<SermonDto | null>(null);
   const [related, setRelated] = useState<SermonDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // ── FULLSCREEN STATE ────────────────────────────────────────
+  // false  = split view (player left, info right) — DEFAULT
+  // true   = player takes up the whole screen (user toggled)
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     const fetchSermon = async () => {
@@ -29,7 +35,7 @@ const SermonDetail: React.FC = () => {
           if (allResponse.data.isSuccess && allResponse.data.data) {
             const others = allResponse.data.data.items
               .filter(s => s.id !== Number(id))
-              .slice(0, 3);
+              .slice(0, 4);
             setRelated(others);
           }
         }
@@ -43,6 +49,15 @@ const SermonDetail: React.FC = () => {
     fetchSermon();
   }, [id]);
 
+  // Close fullscreen on Escape key — good UX
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullscreen) setIsFullscreen(false);
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [isFullscreen]);
+
   const getSpeakerImage = (speakerName: string) => {
     const name = speakerName.toLowerCase();
     if (name.includes('danjuma') || name.includes('gasuk')) return dad;
@@ -52,13 +67,11 @@ const SermonDetail: React.FC = () => {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+      year: 'numeric', month: 'short', day: 'numeric',
     });
   };
 
-  // Loading state
+  // ── LOADING ─────────────────────────────────────────────────
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#FBFBFE] pt-20 flex items-center justify-center">
@@ -70,14 +83,12 @@ const SermonDetail: React.FC = () => {
     );
   }
 
-  // Not found state
+  // ── NOT FOUND ────────────────────────────────────────────────
   if (!sermon) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 pt-20">
         <div className="text-center p-12 bg-white rounded-3xl shadow-xl border border-slate-100 max-w-md">
-          <h2 className="text-3xl font-serif font-bold text-slate-900 mb-4">
-            Sermon Not Found
-          </h2>
+          <h2 className="text-3xl font-serif font-bold text-slate-900 mb-4">Sermon Not Found</h2>
           <p className="text-slate-500 mb-8">
             The message you are looking for might have been moved or archived.
           </p>
@@ -93,227 +104,264 @@ const SermonDetail: React.FC = () => {
     );
   }
 
-  return (
-    <div className="pt-20 bg-[#FBFBFE] min-h-screen">
+  // ── VIDEO PLAYER BLOCK ───────────────────────────────────────
+  // Reused in both split-view and fullscreen mode
+  const VideoPlayer = () => (
+    <div className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl">
+      {sermon.videoUrl ? (
+        <iframe
+          src={sermon.videoUrl}
+          title={sermon.title}
+          className="w-full h-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      ) : (
+        <div className="w-full h-full flex flex-col items-center justify-center relative">
+          {sermon.imageUrl && (
+            <img
+              src={sermon.imageUrl}
+              alt={sermon.title}
+              className="absolute inset-0 w-full h-full object-cover opacity-40 blur-sm scale-105"
+            />
+          )}
+          <div className="relative z-10 text-center">
+            <div className="w-20 h-20 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center mx-auto mb-4">
+              <Play className="w-8 h-8 text-white fill-white" />
+            </div>
+            <p className="text-white font-serif text-xl">Video recording in progress...</p>
+          </div>
+        </div>
+      )}
 
-      {/* Cinematic Theater Header */}
-      <div className="bg-[#0F172A] pt-12 pb-24 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      {/* ── FULLSCREEN TOGGLE — sits on top of the player ── */}
+      <button
+        onClick={() => setIsFullscreen(f => !f)}
+        title={isFullscreen ? 'Exit fullscreen (Esc)' : 'Expand to fullscreen'}
+        className="
+          absolute bottom-3 right-3 z-20
+          flex items-center gap-1.5
+          px-3 py-1.5
+          bg-black/60 hover:bg-black/80
+          backdrop-blur-sm
+          text-white text-[10px] font-bold uppercase tracking-widest
+          rounded-lg border border-white/10
+          transition-all duration-200
+          hover:scale-105
+        "
+      >
+        {isFullscreen
+          ? <><Minimize2 className="w-3.5 h-3.5" /> Exit</>
+          : <><Maximize2 className="w-3.5 h-3.5" /> Fullscreen</>
+        }
+      </button>
+    </div>
+  );
 
-          {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 mb-8 text-slate-400 text-sm font-medium">
-            <Link to="/sermons" className="hover:text-white transition-colors">
-              Archive
-            </Link>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-slate-500 truncate">{sermon.title}</span>
-          </nav>
+  // ── FULLSCREEN OVERLAY ───────────────────────────────────────
+  // When user toggles fullscreen, render player over everything
+  if (isFullscreen) {
+    return (
+      <div className="fixed inset-0 z-[9999] bg-black flex flex-col">
+        {/* Top bar — title + close */}
+        <div className="flex items-center justify-between px-6 py-3 bg-black/80 backdrop-blur-sm border-b border-white/10 shrink-0">
+          <p className="text-white font-semibold text-sm truncate pr-4">{sermon.title}</p>
+          <button
+            onClick={() => setIsFullscreen(false)}
+            className="flex items-center gap-1.5 text-white/70 hover:text-white text-[10px] font-bold uppercase tracking-widest transition-colors"
+          >
+            <X className="w-4 h-4" /> Exit Fullscreen
+          </button>
+        </div>
 
-          {/* Video Player */}
-          <div className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl">
+        {/* Player fills remaining height */}
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="relative w-full h-full max-w-[1600px]">
             {sermon.videoUrl ? (
               <iframe
                 src={sermon.videoUrl}
                 title={sermon.title}
-                className="w-full h-full"
+                className="w-full h-full rounded-xl"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center relative">
-                {sermon.imageUrl && (
-                  <img
-                    src={sermon.imageUrl}
-                    alt={sermon.title}
-                    className="absolute inset-0 w-full h-full object-cover opacity-40 blur-sm scale-105"
-                  />
-                )}
-                <div className="relative z-10 text-center">
-                  <div className="w-20 h-20 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center mx-auto mb-4">
+              <div className="w-full h-full flex items-center justify-center rounded-xl bg-slate-900">
+                <div className="text-center">
+                  <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-4">
                     <Play className="w-8 h-8 text-white fill-white" />
                   </div>
-                  <p className="text-white font-serif text-xl">
-                    Video recording in progress...
-                  </p>
+                  <p className="text-white font-serif text-xl">Video recording in progress...</p>
                 </div>
               </div>
             )}
+
+            {/* Escape hint */}
+            <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/30 text-[10px] uppercase tracking-widest">
+              Press Esc or click "Exit Fullscreen" to return
+            </p>
           </div>
         </div>
       </div>
+    );
+  }
 
-      {/* Content Layout */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-20 pb-24">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+  // ── NORMAL SPLIT VIEW ────────────────────────────────────────
+  return (
+    <div className="pt-20 bg-[#FBFBFE] min-h-screen">
 
-          {/* Main Column */}
-          <div className="lg:col-span-8">
-            <div className="bg-white rounded-3xl p-8 md:p-12 shadow-sm border border-slate-100">
+      {/* Dark Header — now only a slim bar, not full-bleed theater */}
+      <div className="bg-[#0F172A] pt-8 pb-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-              {/* Meta Tags */}
-              <div className="flex flex-wrap gap-3 mb-8">
-                <span className="flex items-center px-4 py-1.5 bg-fuchsia-50 text-fuchsia-700 rounded-full text-xs font-bold border border-fuchsia-100">
-                  <Tag className="w-3.5 h-3.5 mr-2" /> {sermon.series}
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-2 mb-6 text-slate-400 text-sm font-medium">
+            <Link to="/sermons" className="hover:text-white transition-colors flex items-center gap-1">
+              <ArrowLeft className="w-3.5 h-3.5" /> Archive
+            </Link>
+            <ChevronRight className="w-4 h-4" />
+            <span className="text-slate-500 truncate max-w-xs">{sermon.title}</span>
+          </nav>
+
+          {/* ── SPLIT LAYOUT: [Player 60%] [Info Panel 40%] ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+
+            {/* LEFT — Video Player (60% = 3 of 5 cols) */}
+            <div className="lg:col-span-3">
+              <VideoPlayer />
+
+              {/* Series + Date tags below player */}
+              <div className="flex flex-wrap gap-2 mt-3">
+                <span className="flex items-center px-3 py-1 bg-white/10 text-white/70 rounded-full text-[10px] font-bold border border-white/10">
+                  <Tag className="w-3 h-3 mr-1.5" /> {sermon.series}
                 </span>
-                <span className="flex items-center px-4 py-1.5 bg-slate-50 text-slate-600 rounded-full text-xs font-bold border border-slate-100">
-                  <Calendar className="w-3.5 h-3.5 mr-2" /> {formatDate(sermon.sermonDate)}
+                <span className="flex items-center px-3 py-1 bg-white/10 text-white/70 rounded-full text-[10px] font-bold border border-white/10">
+                  <Calendar className="w-3 h-3 mr-1.5" /> {formatDate(sermon.sermonDate)}
                 </span>
-                <span className="flex items-center px-4 py-1.5 bg-slate-50 text-slate-600 rounded-full text-xs font-bold border border-slate-100">
-                  <Clock className="w-3.5 h-3.5 mr-2" /> Full Message
+                <span className="flex items-center px-3 py-1 bg-white/10 text-white/70 rounded-full text-[10px] font-bold border border-white/10">
+                  <Clock className="w-3 h-3 mr-1.5" /> Full Message
                 </span>
               </div>
+            </div>
 
-              <h1 className="text-4xl md:text-5xl font-serif font-bold text-slate-900 mb-8 leading-tight">
-                {sermon.title}
-              </h1>
+            {/* RIGHT — Info Panel (40% = 2 of 5 cols) */}
+            <div className="lg:col-span-2 flex flex-col gap-4">
 
-              {/* Speaker Card */}
-              <div className="flex items-center p-6 bg-slate-50 rounded-2xl mb-10 border border-slate-100">
-                <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-white shadow-sm mr-4 shrink-0">
-                  <img
-                    src={getSpeakerImage(sermon.speaker)}
-                    alt={sermon.speaker}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase tracking-widest text-fuchsia-600 font-black mb-1">
-                    Delivered By
-                  </p>
-                  <h4 className="text-xl font-bold text-slate-900">{sermon.speaker}</h4>
+              {/* Title + Speaker */}
+              <div>
+                <h1 className="text-2xl font-serif font-bold text-white leading-tight mb-4">
+                  {sermon.title}
+                </h1>
+                <div className="flex items-center gap-3 p-4 bg-white/5 rounded-2xl border border-white/10">
+                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20 shrink-0">
+                    <img
+                      src={getSpeakerImage(sermon.speaker)}
+                      alt={sermon.speaker}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-[9px] uppercase tracking-widest text-fuchsia-400 font-black mb-0.5">
+                      Delivered By
+                    </p>
+                    <h4 className="text-base font-bold text-white">{sermon.speaker}</h4>
+                  </div>
                 </div>
               </div>
 
               {/* Description */}
-              <div className="prose prose-slate prose-lg max-w-none text-slate-600">
-                <p className="text-xl leading-relaxed font-medium text-slate-700 mb-8 border-l-4 border-fuchsia-500 pl-6 italic">
+              {sermon.description && (
+                <p className="text-sm text-slate-400 leading-relaxed border-l-2 border-fuchsia-500 pl-4 italic">
                   {sermon.description}
                 </p>
-              </div>
-            </div>
-          </div>
+              )}
 
-          {/* Sidebar */}
-          <div className="lg:col-span-4 space-y-8">
+              {/* Resources */}
+              <div className="space-y-2">
+                <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold mb-1">Resources</p>
 
-            {/* Resources */}
-            <div className="bg-slate-900 rounded-3xl p-8 text-white shadow-xl">
-              <h3 className="text-xl font-bold mb-6 flex items-center">
-                <Download className="w-5 h-5 mr-3 text-fuchsia-400" /> Resources
-              </h3>
-              <div className="space-y-4">
-
-                {/* Sermon Notes — placeholder */}
-                <button className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-all">
-                  <div className="flex items-center">
-                    <div className="p-2 bg-fuchsia-500/20 rounded-lg mr-3">
-                      <FileText className="w-4 h-4 text-fuchsia-400" />
-                    </div>
-                    <span className="font-semibold text-sm">Sermon Notes</span>
-                  </div>
-                  <span className="text-[10px] bg-white/10 px-2 py-1 rounded font-bold uppercase">
-                    PDF
-                  </span>
-                </button>
-
-                {/* ✅ Audio — real if available, disabled if not */}
+                {/* Audio */}
                 {sermon.audioUrl ? (
                   <div className="space-y-2">
                     <a
                       href={sermon.audioUrl}
                       download
-                      className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-all"
+                      className="w-full flex items-center justify-between p-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition-all"
                     >
-                      <div className="flex items-center">
-                        <div className="p-2 bg-blue-500/20 rounded-lg mr-3">
-                          <Play className="w-4 h-4 text-blue-400" />
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 bg-blue-500/20 rounded-lg">
+                          <Download className="w-3.5 h-3.5 text-blue-400" />
                         </div>
-                        <span className="font-semibold text-sm">Download Audio</span>
+                        <span className="font-semibold text-xs text-white">Download Audio</span>
                       </div>
-                      <span className="text-[10px] bg-white/10 px-2 py-1 rounded font-bold uppercase">
-                        MP3
-                      </span>
+                      <span className="text-[9px] bg-white/10 px-2 py-0.5 rounded font-bold uppercase text-white/60">MP3</span>
                     </a>
-                    {/* Inline audio player */}
-                    <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
-                      <p className="text-[10px] uppercase tracking-widest text-white/40 mb-2">
-                        Stream Audio
-                      </p>
-                      <audio controls className="w-full">
+                    <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                      <audio controls className="w-full h-8" style={{ accentColor: '#a855f7' }}>
                         <source src={sermon.audioUrl} />
                       </audio>
                     </div>
                   </div>
                 ) : (
-                  <div className="w-full flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10 opacity-40 cursor-not-allowed">
-                    <div className="flex items-center">
-                      <div className="p-2 bg-blue-500/20 rounded-lg mr-3">
-                        <Play className="w-4 h-4 text-blue-400" />
-                      </div>
-                      <span className="font-semibold text-sm">Audio Unavailable</span>
+                  <div className="w-full flex items-center gap-2 p-3 bg-white/5 rounded-xl border border-white/10 opacity-40 cursor-not-allowed">
+                    <div className="p-1.5 bg-blue-500/20 rounded-lg">
+                      <Music className="w-3.5 h-3.5 text-blue-400" />
                     </div>
-                    <span className="text-[10px] bg-white/10 px-2 py-1 rounded font-bold uppercase">
-                      MP3
-                    </span>
+                    <span className="text-xs text-white">Audio Unavailable</span>
                   </div>
                 )}
 
-                <hr className="border-white/5 my-2" />
-
-                <button className="w-full py-4 bg-fuchsia-600 hover:bg-fuchsia-500 text-white rounded-2xl font-bold transition-all flex items-center justify-center gap-2">
-                  <Share2 className="w-4 h-4" /> Share This Message
+                {/* Share */}
+                <button className="w-full py-3 bg-fuchsia-600 hover:bg-fuchsia-500 text-white rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2">
+                  <Share2 className="w-3.5 h-3.5" /> Share This Message
                 </button>
               </div>
             </div>
-
-            {/* Related Sermons */}
-            {related.length > 0 && (
-              <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
-                <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center justify-between">
-                  Recommended
-                  <Link
-                    to="/sermons"
-                    className="text-xs text-fuchsia-600 hover:underline"
-                  >
-                    View All
-                  </Link>
-                </h3>
-                <div className="space-y-6">
-                  {related.map((rel) => (
-                    <Link
-                      key={rel.id}
-                      to={`/sermons/${rel.id}`}
-                      className="group flex gap-4 items-center"
-                    >
-                      <div className="w-20 h-20 shrink-0 relative rounded-2xl overflow-hidden shadow-sm bg-slate-100">
-                        {rel.imageUrl ? (
-                          <img
-                            src={rel.imageUrl}
-                            alt={rel.title}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Music className="w-8 h-8 text-slate-300" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-bold text-sm text-slate-900 leading-tight group-hover:text-fuchsia-600 transition-colors line-clamp-2 mb-1">
-                          {rel.title}
-                        </h4>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">
-                          {rel.speaker}
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
+
+      {/* ── BOTTOM SECTION: Related Sermons (full width) ── */}
+      {related.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-slate-900 font-serif">More Messages</h3>
+            <Link to="/sermons" className="text-xs text-fuchsia-600 hover:underline font-bold uppercase tracking-widest">
+              View All
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {related.map(rel => (
+              <Link
+                key={rel.id}
+                to={`/sermons/${rel.id}`}
+                className="group"
+              >
+                <div className="aspect-video rounded-xl overflow-hidden bg-slate-200 mb-3 shadow-sm">
+                  {rel.imageUrl ? (
+                    <img
+                      src={rel.imageUrl}
+                      alt={rel.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Music className="w-8 h-8 text-slate-300" />
+                    </div>
+                  )}
+                </div>
+                <h4 className="font-bold text-sm text-slate-900 leading-tight group-hover:text-fuchsia-600 transition-colors line-clamp-2 mb-1">
+                  {rel.title}
+                </h4>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">
+                  {rel.speaker}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

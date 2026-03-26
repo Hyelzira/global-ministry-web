@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,10 +20,17 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // ✅ Show success toast if coming from email confirmation
+  // Read the redirect path injected by Navbar and GivePage:
+  //   Navbar:   navigate('/login', { state: { from: '/give' } })
+  //   GivePage: navigate('/login', { state: { from: location.pathname }, replace: true })
+  // Falls back to '/' if the user landed here directly.
+  const from = (location.state as { from?: string })?.from ?? '/';
+
+  // Show success toast if coming from email confirmation
   useEffect(() => {
     if (searchParams.get('confirmed') === 'true') {
       toast.success('Email confirmed successfully! You can now login.');
@@ -43,10 +50,16 @@ const LoginPage = () => {
         login(response.data.data);
         toast.success(`Welcome back, ${response.data.data.firstName}!`);
 
+        // Admin always goes to the dashboard — that takes priority over any
+        // "from" path, since admins shouldn't land on /give or other pages
+        // mid-flow after signing in.
         if (response.data.data.roles.includes('Admin')) {
-          navigate('/admin');
+          navigate('/admin', { replace: true });
         } else {
-          navigate('/');
+          // Non-admin: honour the redirect path from Navbar / GivePage.
+          // replace: true keeps the browser history clean — pressing Back
+          // won't send the user to /login again.
+          navigate(from, { replace: true });
         }
       } else {
         toast.error(response.data.message || 'Login failed');
@@ -80,6 +93,16 @@ const LoginPage = () => {
             <h1 className="text-2xl font-bold text-gray-900">Welcome Back</h1>
             <p className="text-gray-500 text-sm mt-1">Sign in to your account</p>
           </div>
+
+          {/* Contextual hint when redirected from a protected route (e.g. /give) */}
+          {from && from !== '/' && (
+            <div className="mb-6 flex items-start gap-3 p-3 bg-fuchsia-50 rounded-xl border border-fuchsia-100">
+              <FiLock className="text-fuchsia-500 shrink-0 mt-0.5 w-4 h-4" />
+              <p className="text-xs text-fuchsia-700 font-medium leading-relaxed">
+                Sign in to continue. You'll be taken directly to your destination after logging in.
+              </p>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 
