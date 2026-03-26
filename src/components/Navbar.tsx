@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import {
   Menu, X, Heart, Globe, Play, Calendar,
-  Bell, MessageSquare, UserCircle, ShieldCheck
+  Bell, MessageSquare, UserCircle, ShieldCheck, BookOpen // Added BookOpen icon
 } from 'lucide-react';
 import { NAV_LINKS } from '../constants';
 import logo from '../assets/flames.jpg';
@@ -24,6 +24,7 @@ const Navbar: React.FC = () => {
       case 'about': return <Globe className="w-6 h-6" />;
       case 'sermons': return <Play className="w-6 h-6" />;
       case 'events': return <Calendar className="w-6 h-6" />;
+      case 'books': return <BookOpen className="w-6 h-6" />; // Added case for books
       case 'announcements':
       case 'news': return <Bell className="w-6 h-6" />;
       case 'community': return <MessageSquare className="w-6 h-6" />;
@@ -70,7 +71,18 @@ const Navbar: React.FC = () => {
               </NavLink>
             ))}
 
-            {/* News — shortened from Announcements */}
+            {/* Added: Book Store Link */}
+            <NavLink
+              to="/books"
+              className={({ isActive }) =>
+                `text-[10px] font-black uppercase tracking-widest transition-colors whitespace-nowrap ${
+                  isActive ? 'text-fuchsia-500' : 'text-gray-900 hover:text-amber-600'
+                }`
+              }
+            >
+              Books
+            </NavLink>
+
             <NavLink
               to="/announcements"
               className={({ isActive }) =>
@@ -252,7 +264,20 @@ const Navbar: React.FC = () => {
               </Link>
             ))}
 
-            {/* Announcements in mobile */}
+            {/* Added: Book Store for mobile */}
+            <Link
+              to="/books"
+              onClick={() => setIsOpen(false)}
+              className="flex flex-col items-center py-7 border-b border-white/5 hover:bg-white/5 transition-colors"
+            >
+              <div className="text-white/70 mb-2">
+                <BookOpen className="w-6 h-6" />
+              </div>
+              <span className="text-white text-[10px] font-bold uppercase tracking-[0.25em]">
+                Books
+              </span>
+            </Link>
+
             <Link
               to="/announcements"
               onClick={() => setIsOpen(false)}
