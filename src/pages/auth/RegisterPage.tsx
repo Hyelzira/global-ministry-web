@@ -8,23 +8,13 @@ import { FiMail, FiLock, FiUser, FiEye, FiEyeOff } from 'react-icons/fi';
 import { authApi } from '../../api/authApi';
 import logo from '../../assets/flames.jpg';
 
+/* ================= VALIDATION ================= */
+
 const registerSchema = z.object({
-  firstName: z
-    .string()
-    .min(2, 'First name must be at least 2 characters')
-    .max(50),
-  lastName: z
-    .string()
-    .min(2, 'Last name must be at least 2 characters')
-    .max(50),
-  userName: z
-    .string()
-    .min(3, 'Username must be at least 3 characters')
-    .max(50),
-  email: z
-    .string()
-    .min(1, 'Email is required')
-    .email('Please enter a valid email'),
+  firstName: z.string().min(2, 'First name must be at least 2 characters').max(50),
+  lastName: z.string().min(2, 'Last name must be at least 2 characters').max(50),
+  userName: z.string().min(3, 'Username must be at least 3 characters').max(50),
+  email: z.string().min(1, 'Email is required').email('Please enter a valid email'),
   password: z
     .string()
     .min(8, 'Password must be at least 8 characters')
@@ -44,9 +34,10 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
   const navigate = useNavigate();
 
-  // ✅ Read pre-filled data from URL params (from Hero signup form)
+  /* ===== PREFILL FROM HERO FORM ===== */
   const [searchParams] = useSearchParams();
   const prefillFirstName = searchParams.get('firstName') ?? '';
   const prefillLastName = searchParams.get('lastName') ?? '';
@@ -66,8 +57,11 @@ const RegisterPage = () => {
     },
   });
 
+  /* ================= SUBMIT ================= */
+
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
+
     try {
       const response = await authApi.register({
         firstName: data.firstName,
@@ -79,239 +73,134 @@ const RegisterPage = () => {
       });
 
       if (response.data.isSuccess) {
-        toast.success('Registration successful! Please check your email to confirm your account.');
+        toast.success(
+          'Registration successful! Please check your email to confirm your account.'
+        );
         navigate('/login');
       } else {
         toast.error(response.data.message || 'Registration failed');
       }
     } catch (error: unknown) {
       const err = error as {
-        response?: { data?: { message?: string; errors?: string } }
+        response?: { data?: { message?: string; errors?: string } };
       };
+
       const message =
         err.response?.data?.errors ||
         err.response?.data?.message ||
         'Registration failed. Please try again.';
+
       toast.error(String(message));
     } finally {
       setIsLoading(false);
     }
   };
 
+  /* ================= UI ================= */
+
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-lg">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-fuchsia-50 flex items-center justify-center px-4 py-14">
 
-        {/* Card */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+      <div className="w-full max-w-xl">
 
-          {/* Logo + Title */}
-          <div className="flex flex-col items-center mb-8">
-            <img
-              src={logo}
-              alt="Global Flame Ministries"
-              className="h-16 w-16 rounded-full object-cover mb-3 ring-4 ring-fuchsia-100"
-            />
-            <h1 className="text-2xl font-bold text-gray-900">Join Our Community</h1>
-            <p className="text-gray-500 text-sm mt-1">
+        {/* CARD */}
+        <div className="bg-white/90 backdrop-blur-xl border border-gray-200 shadow-2xl rounded-3xl p-10">
+
+          {/* HEADER */}
+          <div className="flex flex-col items-center mb-10">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-fuchsia-600 to-purple-700 flex items-center justify-center shadow-lg mb-4">
+              <img
+                src={logo}
+                alt="Global Flame Ministries"
+                className="w-14 h-14 rounded-full object-cover"
+              />
+            </div>
+
+            <h1 className="text-3xl font-bold text-gray-900">
+              Join Our Community
+            </h1>
+
+            <p className="text-gray-500 text-sm mt-2 text-center">
               Create your account to get started
             </p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 
-            {/* First + Last Name */}
+            {/* FIRST + LAST */}
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  First Name
-                </label>
-                <div className="relative">
-                  <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <input
-                    {...register('firstName')}
-                    type="text"
-                    placeholder="John"
-                    className={`w-full pl-9 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-fuchsia-500 focus:border-transparent transition-all bg-white placeholder-gray-400 text-sm ${
-                      errors.firstName ? 'border-red-400' : 'border-gray-300'
-                    }`}
-                  />
-                </div>
-                {errors.firstName && (
-                  <p className="text-red-500 text-xs mt-1">{errors.firstName.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Last Name
-                </label>
-                <div className="relative">
-                  <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <input
-                    {...register('lastName')}
-                    type="text"
-                    placeholder="Doe"
-                    className={`w-full pl-9 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-fuchsia-500 focus:border-transparent transition-all bg-white placeholder-gray-400 text-sm ${
-                      errors.lastName ? 'border-red-400' : 'border-gray-300'
-                    }`}
-                  />
-                </div>
-                {errors.lastName && (
-                  <p className="text-red-500 text-xs mt-1">{errors.lastName.message}</p>
-                )}
-              </div>
+              <Input label="First Name" icon={<FiUser />} register={register('firstName')} error={errors.firstName?.message} placeholder="John" />
+              <Input label="Last Name" icon={<FiUser />} register={register('lastName')} error={errors.lastName?.message} placeholder="Doe" />
             </div>
 
-            {/* Username */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Username
-              </label>
-              <div className="relative">
-                <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  {...register('userName')}
-                  type="text"
-                  placeholder="johndoe"
-                  className={`w-full pl-9 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-fuchsia-500 focus:border-transparent transition-all bg-white placeholder-gray-400 text-sm ${
-                    errors.userName ? 'border-red-400' : 'border-gray-300'
-                  }`}
-                />
-              </div>
-              {errors.userName && (
-                <p className="text-red-500 text-xs mt-1">{errors.userName.message}</p>
-              )}
-            </div>
+            <Input label="Username" icon={<FiUser />} register={register('userName')} error={errors.userName?.message} placeholder="johndoe" />
 
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Email Address
-              </label>
-              <div className="relative">
-                <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  {...register('email')}
-                  type="email"
-                  placeholder="you@example.com"
-                  className={`w-full pl-9 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-fuchsia-500 focus:border-transparent transition-all bg-white placeholder-gray-400 text-sm ${
-                    errors.email ? 'border-red-400' : 'border-gray-300'
-                  }`}
-                />
-              </div>
-              {errors.email && (
-                <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
-              )}
-            </div>
+            <Input label="Email Address" icon={<FiMail />} register={register('email')} error={errors.email?.message} placeholder="you@example.com" />
 
-            {/* Module Selection */}
+            {/* MODULE SELECTOR */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="text-sm font-semibold text-gray-700">
                 I want to join
               </label>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="relative cursor-pointer">
-                  <input
-                    {...register('module')}
-                    type="radio"
-                    value="Ministry"
-                    className="peer sr-only"
-                  />
-                  <div className="border-2 border-gray-200 peer-checked:border-fuchsia-600 peer-checked:bg-fuchsia-50 rounded-lg p-3 text-center transition-all">
-                    <div className="text-2xl mb-1">🔥</div>
-                    <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">
-                      Global Flame Ministry
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">Main congregation</p>
-                  </div>
-                </label>
 
-                <label className="relative cursor-pointer">
-                  <input
-                    {...register('module')}
-                    type="radio"
-                    value="Youth"
-                    className="peer sr-only"
-                  />
-                  <div className="border-2 border-gray-200 peer-checked:border-fuchsia-600 peer-checked:bg-fuchsia-50 rounded-lg p-3 text-center transition-all">
-                    <div className="text-2xl mb-1">⚡</div>
-                    <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">
-                      House of Opra
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">Youth community</p>
-                  </div>
-                </label>
+              <div className="grid grid-cols-2 gap-4 mt-3">
+
+                {[
+                  { value: 'Ministry', title: 'Global Flame Ministry', sub: 'Main congregation', icon: '🔥' },
+                  { value: 'Youth', title: 'House of Opra', sub: 'Youth community', icon: '⚡' },
+                ].map((m) => (
+                  <label key={m.value} className="cursor-pointer">
+                    <input {...register('module')} type="radio" value={m.value} className="peer hidden" />
+
+                    <div className="rounded-xl border-2 border-gray-200 p-5 text-center transition-all duration-300
+                     peer-checked:border-fuchsia-600
+                     peer-checked:bg-gradient-to-br
+                     peer-checked:from-fuchsia-50
+                     peer-checked:to-purple-50
+                     hover:border-fuchsia-300">
+
+                      <div className="text-3xl mb-2">{m.icon}</div>
+
+                      <p className="font-semibold text-sm text-gray-800">
+                        {m.title}
+                      </p>
+
+                      <p className="text-xs text-gray-500 mt-1">
+                        {m.sub}
+                      </p>
+                    </div>
+                  </label>
+                ))}
               </div>
             </div>
 
-            {/* Password */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Password
-              </label>
-              <div className="relative">
-                <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  {...register('password')}
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Min 8 characters"
-                  className={`w-full pl-9 pr-10 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-fuchsia-500 focus:border-transparent transition-all bg-white placeholder-gray-400 text-sm ${
-                    errors.password ? 'border-red-400' : 'border-gray-300'
-                  }`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
-                </button>
-              </div>
-              {errors.password && (
-                <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
-              )}
-            </div>
+            <PasswordInput
+              label="Password"
+              register={register('password')}
+              error={errors.password?.message}
+              show={showPassword}
+              toggle={() => setShowPassword(!showPassword)}
+            />
 
-            {/* Confirm Password */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Confirm Password
-              </label>
-              <div className="relative">
-                <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  {...register('confirmPassword')}
-                  type={showConfirm ? 'text' : 'password'}
-                  placeholder="Repeat your password"
-                  className={`w-full pl-9 pr-10 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-fuchsia-500 focus:border-transparent transition-all bg-white placeholder-gray-400 text-sm ${
-                    errors.confirmPassword ? 'border-red-400' : 'border-gray-300'
-                  }`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirm(!showConfirm)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showConfirm ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
-                </button>
-              </div>
-              {errors.confirmPassword && (
-                <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>
-              )}
-            </div>
+            <PasswordInput
+              label="Confirm Password"
+              register={register('confirmPassword')}
+              error={errors.confirmPassword?.message}
+              show={showConfirm}
+              toggle={() => setShowConfirm(!showConfirm)}
+            />
 
-            {/* Submit */}
+            {/* SUBMIT */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-fuchsia-700 hover:bg-purple-800 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
+              className="w-full bg-gradient-to-r from-fuchsia-600 to-purple-700 text-white font-semibold py-3 rounded-xl shadow-lg transition-all hover:scale-[1.01] disabled:opacity-50 flex justify-center items-center gap-2"
             >
               {isLoading ? (
                 <>
-                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" opacity="0.25"/>
+                    <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.3 0 0 5.3 0 12h4z" opacity="0.75"/>
                   </svg>
                   Creating account...
                 </>
@@ -321,19 +210,16 @@ const RegisterPage = () => {
             </button>
           </form>
 
-          {/* Login link */}
-          <p className="text-center text-sm text-gray-500 mt-6">
+          {/* LOGIN */}
+          <p className="text-center text-sm text-gray-500 mt-8">
             Already have an account?{' '}
-            <Link
-              to="/login"
-              className="text-fuchsia-600 hover:text-fuchsia-800 font-semibold"
-            >
+            <Link to="/login" className="text-fuchsia-600 font-semibold hover:underline">
               Sign in
             </Link>
           </p>
         </div>
 
-        {/* Back to home */}
+        {/* BACK HOME */}
         <p className="text-center mt-6 text-sm text-gray-400">
           <Link to="/" className="hover:text-fuchsia-600 transition">
             ← Back to Home
@@ -345,3 +231,58 @@ const RegisterPage = () => {
 };
 
 export default RegisterPage;
+
+/* ================= REUSABLE INPUT ================= */
+
+const Input = ({ label, icon, register, error, placeholder }: any) => (
+  <div>
+    <label className="text-sm font-semibold text-gray-700">{label}</label>
+
+    <div className="relative mt-1">
+      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+        {icon}
+      </span>
+
+      <input
+        {...register}
+        placeholder={placeholder}
+        className={`w-full pl-10 pr-4 py-3 rounded-xl border focus:ring-2 focus:ring-fuchsia-500 outline-none text-sm ${
+          error ? 'border-red-400' : 'border-gray-300'
+        }`}
+      />
+    </div>
+
+    {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+  </div>
+);
+
+/* ================= PASSWORD INPUT ================= */
+
+const PasswordInput = ({ label, register, error, show, toggle }: any) => (
+  <div>
+    <label className="text-sm font-semibold text-gray-700">{label}</label>
+
+    <div className="relative mt-1">
+      <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+
+      <input
+        {...register}
+        type={show ? 'text' : 'password'}
+        placeholder="Minimum 8 characters"
+        className={`w-full pl-10 pr-10 py-3 rounded-xl border focus:ring-2 focus:ring-fuchsia-500 outline-none text-sm ${
+          error ? 'border-red-400' : 'border-gray-300'
+        }`}
+      />
+
+      <button
+        type="button"
+        onClick={toggle}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+      >
+        {show ? <FiEyeOff /> : <FiEye />}
+      </button>
+    </div>
+
+    {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+  </div>
+);

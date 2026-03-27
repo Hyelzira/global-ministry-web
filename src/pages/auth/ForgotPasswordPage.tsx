@@ -3,12 +3,12 @@ import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FiMail } from 'react-icons/fi';
+import { Mail, ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react';
 import { authApi } from '../../api/authApi';
 import logo from '../../assets/flames.jpg';
 
 const schema = z.object({
-  email: z.string().min(1, 'Email is required').email('Please enter a valid email'),
+  email: z.string().min(1, 'Email is required').email('Enter a valid email address'),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -17,7 +17,11 @@ const ForgotPasswordPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
@@ -25,10 +29,8 @@ const ForgotPasswordPage = () => {
     setIsLoading(true);
     try {
       await authApi.forgotPassword(data);
-      // Always show success — never reveal if email exists
       setSubmitted(true);
     } catch {
-      // Still show success — prevents email enumeration
       setSubmitted(true);
     } finally {
       setIsLoading(false);
@@ -36,98 +38,105 @@ const ForgotPasswordPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+        
+        {/* Back Navigation */}
+        <Link
+          to="/"
+          className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 mb-6 transition"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back
+        </Link>
 
-          {/* Logo + Title */}
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-8">
+          
+          {/* Header */}
           <div className="flex flex-col items-center mb-8">
             <img
               src={logo}
-              alt="Global Flame Ministries"
-              className="h-16 w-16 rounded-full object-cover mb-3 ring-4 ring-fuchsia-100"
+              alt="Logo"
+              className="h-14 w-14 rounded-full object-cover mb-4"
             />
-            <h1 className="text-2xl font-bold text-gray-900">Forgot Password?</h1>
-            <p className="text-gray-500 text-sm mt-1 text-center">
-              No worries — enter your email and we'll send you a reset link.
+            <h1 className="text-2xl font-semibold text-gray-900">
+              Forgot your password?
+            </h1>
+            <p className="text-sm text-gray-500 mt-2 text-center">
+              Enter your email address and we’ll send you a link to reset your password.
             </p>
           </div>
 
-          {/* Success State */}
           {submitted ? (
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                <span className="text-3xl">✅</span>
+            <div className="text-center">
+              <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 className="w-7 h-7 text-green-600" />
               </div>
-              <h2 className="text-lg font-bold text-gray-900">Check your email</h2>
-              <p className="text-gray-500 text-sm">
-                If an account exists for that email address, we've sent a password reset link.
-                Check your inbox and spam folder.
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                Check your email
+              </h2>
+              <p className="text-sm text-gray-500 mb-6">
+                If an account exists for this email, you’ll receive a password reset link shortly.
               </p>
               <Link
                 to="/login"
-                className="inline-block w-full text-center bg-fuchsia-700 hover:bg-purple-800 text-white font-semibold py-3 px-6 rounded-lg transition-all mt-4"
+                className="block w-full bg-gray-900 text-white py-3 rounded-lg text-sm font-medium hover:bg-black transition"
               >
-                Back to Login
+                Return to login
               </Link>
             </div>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+              
+              {/* Email Field */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Email Address
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email address
                 </label>
                 <div className="relative">
-                  <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
                     {...register('email')}
                     type="email"
                     placeholder="you@example.com"
-                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-fuchsia-500 focus:border-transparent transition-all bg-white placeholder-gray-400 ${
+                    className={`w-full pl-10 pr-3 py-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 ${
                       errors.email ? 'border-red-400' : 'border-gray-300'
                     }`}
                   />
                 </div>
                 {errors.email && (
-                  <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.email.message}
+                  </p>
                 )}
               </div>
 
+              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-fuchsia-700 hover:bg-purple-800 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-gray-900 text-white py-3 rounded-lg text-sm font-medium hover:bg-black transition flex items-center justify-center"
               >
                 {isLoading ? (
-                  <>
-                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    Sending...
-                  </>
+                  <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  'Send Reset Link'
+                  'Send reset link'
                 )}
               </button>
+
+              {/* Footer */}
+              <p className="text-sm text-gray-500 text-center">
+                Remember your password?{' '}
+                <Link
+                  to="/login"
+                  className="text-gray-900 font-medium hover:underline"
+                >
+                  Sign in
+                </Link>
+              </p>
             </form>
           )}
-
-          {!submitted && (
-            <p className="text-center text-sm text-gray-500 mt-6">
-              Remember your password?{' '}
-              <Link to="/login" className="text-fuchsia-600 hover:text-fuchsia-800 font-semibold">
-                Sign in
-              </Link>
-            </p>
-          )}
         </div>
-
-        <p className="text-center mt-6 text-sm text-gray-400">
-          <Link to="/" className="hover:text-fuchsia-600 transition">
-            ← Back to Home
-          </Link>
-        </p>
       </div>
     </div>
   );
