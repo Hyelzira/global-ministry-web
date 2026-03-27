@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, HandHeart, Check, Copy, Loader2 } from 'lucide-react';
+import { X, Check, Copy, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { prayerApi } from '../api/prayerApi';
 import { useAuth } from '../context/AuthContext';
@@ -14,18 +14,17 @@ type Step = 'form' | 'success';
 const PrayerRequestModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const { isAuthenticated, user } = useAuth();
 
-  const [step, setStep]         = useState<Step>('form');
-  const [content, setContent]   = useState('');
-  const [name, setName]         = useState('');
-  const [email, setEmail]       = useState('');
+  const [step, setStep] = useState<Step>('form');
+  const [content, setContent] = useState('');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [token, setToken]       = useState('');
-  const [copied, setCopied]     = useState(false);
+  const [token, setToken] = useState('');
+  const [copied, setCopied] = useState(false);
 
   if (!isOpen) return null;
 
   const handleClose = () => {
-    // Reset state on close
     setStep('form');
     setContent('');
     setName('');
@@ -39,17 +38,17 @@ const PrayerRequestModal: React.FC<Props> = ({ isOpen, onClose }) => {
     e.preventDefault();
 
     if (!content.trim() || content.trim().length < 5) {
-      toast.error('Please share your prayer request (at least 5 characters)');
+      toast.error('Please enter a valid prayer request.');
       return;
     }
 
     setIsLoading(true);
+
     try {
       const dto = {
         content: content.trim(),
-        // Only send name/email if anonymous — backend pulls from JWT if logged in
         ...(!isAuthenticated && {
-          name:  name.trim() || undefined,
+          name: name.trim() || undefined,
           email: email.trim() || undefined,
         }),
       };
@@ -60,10 +59,10 @@ const PrayerRequestModal: React.FC<Props> = ({ isOpen, onClose }) => {
         setToken(res.data.data.anonymousToken);
         setStep('success');
       } else {
-        toast.error(res.data.message || 'Failed to submit. Please try again.');
+        toast.error(res.data.message || 'Unable to submit request.');
       }
     } catch {
-      toast.error('Something went wrong. Please try again.');
+      toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -72,106 +71,104 @@ const PrayerRequestModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const copyToken = () => {
     navigator.clipboard.writeText(token);
     setCopied(true);
-    toast.success('Tracking ID copied!');
+    toast.success('ID copied');
     setTimeout(() => setCopied(false), 2000);
   };
 
   return (
-    // Backdrop
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+
+      {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/40"
         onClick={handleClose}
       />
 
       {/* Modal */}
-      <div className="relative bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden">
-
-        {/* Top accent bar */}
-        <div className="h-1 w-full bg-gradient-to-r from-fuchsia-500 to-purple-600" />
+      <div className="relative w-full max-w-xl bg-white rounded-xl shadow-lg border border-gray-200">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-8 py-5 border-b border-slate-100">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-fuchsia-50 flex items-center justify-center">
-              <HandHeart className="w-5 h-5 text-fuchsia-600" />
-            </div>
-            <div>
-              <h2 className="font-bold text-slate-900 text-base">Prayer Request</h2>
-              <p className="text-xs text-slate-500">We pray for every request personally</p>
-            </div>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">
+              Prayer Request
+            </h2>
+            <p className="text-sm text-gray-500">
+              All submissions are handled with care and confidentiality.
+            </p>
           </div>
+
           <button
             onClick={handleClose}
-            className="p-2 rounded-lg text-slate-400 hover:text-black hover:bg-slate-100 transition-all"
+            className="p-2 rounded-md hover:bg-gray-100"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
 
-        {/* ── FORM STEP ──────────────────────────────────────────────────── */}
+        {/* FORM */}
         {step === 'form' && (
-          <form onSubmit={handleSubmit} className="px-8 py-6 space-y-5">
+          <form onSubmit={handleSubmit} className="px-6 py-6 space-y-6">
 
-            {/* If logged in — show who is submitting */}
+            {/* User Info */}
             {isAuthenticated && user ? (
-              <div className="flex items-center gap-3 p-3 bg-fuchsia-50 rounded-xl border border-fuchsia-100">
-                <div className="w-8 h-8 rounded-full bg-fuchsia-600 flex items-center justify-center text-white text-xs font-bold">
+              <div className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                <div className="w-8 h-8 rounded-full bg-gray-900 text-white flex items-center justify-center text-xs font-medium">
                   {user.firstName?.[0]}{user.lastName?.[0]}
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-slate-800">{user.fullName}</p>
-                  <p className="text-xs text-slate-500">{user.email}</p>
+                  <p className="text-sm font-medium text-gray-800">
+                    {user.fullName}
+                  </p>
+                  <p className="text-xs text-gray-500">{user.email}</p>
                 </div>
-                <span className="ml-auto text-[10px] font-black uppercase tracking-widest text-fuchsia-600 bg-fuchsia-100 px-2 py-1 rounded-full">
-                  Logged in
-                </span>
               </div>
             ) : (
-              // Anonymous — optional name and email
-              <div className="space-y-3">
-                <p className="text-xs font-black uppercase tracking-widest text-slate-400">
+              <div>
+                <label className="text-sm font-medium text-gray-700">
                   Your details (optional)
-                </p>
-                <div className="grid grid-cols-2 gap-3">
+                </label>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
                   <input
-                    type="text"
-                    placeholder="Your name"
+                    placeholder="Name"
                     value={name}
                     onChange={e => setName(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl text-sm focus:border-fuchsia-400 outline-none transition-all placeholder:text-slate-400"
+                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
                   />
                   <input
                     type="email"
-                    placeholder="Email (for updates)"
+                    placeholder="Email"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl text-sm focus:border-fuchsia-400 outline-none transition-all placeholder:text-slate-400"
+                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
                   />
                 </div>
-                <p className="text-xs text-slate-400">
-                  You can submit anonymously — your details are never required.
+
+                <p className="text-xs text-gray-500 mt-2">
+                  You may submit your request anonymously.
                 </p>
               </div>
             )}
 
-            {/* Prayer content */}
+            {/* Prayer Content */}
             <div>
-              <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
-                Your prayer request <span className="text-red-400">*</span>
-              </p>
+              <label className="text-sm font-medium text-gray-700">
+                Prayer request
+              </label>
+
               <textarea
                 rows={5}
-                placeholder="Share what's on your heart. Our team will pray for you personally..."
+                maxLength={2000}
                 value={content}
                 onChange={e => setContent(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl text-sm focus:border-fuchsia-400 outline-none transition-all resize-none placeholder:text-slate-400 leading-relaxed"
+                placeholder="Write your request here..."
+                className="w-full mt-2 border border-gray-300 rounded-lg px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
               />
-              <div className="flex justify-between mt-1">
-                <p className="text-xs text-slate-400">Minimum 5 characters</p>
-                <p className={`text-xs ${content.length > 1900 ? 'text-red-400' : 'text-slate-400'}`}>
-                  {content.length}/2000
-                </p>
+
+              <div className="flex justify-between text-xs text-gray-400 mt-1">
+                <span>Minimum 5 characters</span>
+                <span>{content.length}/2000</span>
               </div>
             </div>
 
@@ -179,74 +176,61 @@ const PrayerRequestModal: React.FC<Props> = ({ isOpen, onClose }) => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-fuchsia-600 text-white py-4 rounded-xl font-bold uppercase tracking-widest text-sm flex items-center justify-center gap-2 hover:bg-fuchsia-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full bg-gray-900 text-white py-3 rounded-lg text-sm font-medium hover:bg-black transition flex items-center justify-center"
             >
               {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Submitting...
-                </>
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <>
-                  <HandHeart className="w-4 h-4" />
-                  Send Prayer Request
-                </>
+                'Submit request'
               )}
             </button>
 
-            <p className="text-center text-xs text-slate-400 pb-2">
-              🔒 Your request is confidential and seen only by our prayer team.
+            <p className="text-xs text-gray-400 text-center">
+              Your request will only be visible to the prayer team.
             </p>
           </form>
         )}
 
-        {/* ── SUCCESS STEP ───────────────────────────────────────────────── */}
+        {/* SUCCESS */}
         {step === 'success' && (
-          <div className="px-8 py-10 text-center">
+          <div className="px-6 py-10 text-center">
 
-            {/* Success icon */}
-            <div className="w-16 h-16 rounded-full bg-emerald-50 border-2 border-emerald-200 flex items-center justify-center mx-auto mb-5">
-              <Check className="w-8 h-8 text-emerald-500" />
+            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Check className="w-6 h-6 text-green-600" />
             </div>
 
-            <h3 className="text-2xl font-serif font-medium text-slate-900 mb-2">
-              We've received your request 🙏
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Request submitted
             </h3>
-            <p className="text-slate-500 text-sm leading-relaxed mb-8 max-w-sm mx-auto">
-              Our prayer team will be interceding for you. You can track the status
-              of your prayer request using the ID below.
+
+            <p className="text-sm text-gray-500 mb-6">
+              Your prayer request has been received. You may use the ID below for reference.
             </p>
 
-            {/* Token card */}
-            <div className="bg-slate-50 border-2 border-slate-200 rounded-xl p-5 mb-6 text-left">
-              <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
-                Your Prayer Request ID
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-left mb-6">
+              <p className="text-xs text-gray-500 mb-1">
+                Reference ID
               </p>
-              <div className="flex items-center gap-3">
-                <code className="flex-1 text-xs text-slate-700 font-mono bg-white border border-slate-200 px-3 py-2 rounded-lg truncate">
+
+              <div className="flex items-center gap-2">
+                <code className="flex-1 text-xs font-mono bg-white border border-gray-200 px-3 py-2 rounded-md truncate">
                   {token}
                 </code>
+
                 <button
                   onClick={copyToken}
-                  className={`p-2.5 rounded-lg border-2 transition-all flex-shrink-0 ${
-                    copied
-                      ? 'border-emerald-400 bg-emerald-50 text-emerald-600'
-                      : 'border-slate-200 hover:border-slate-400 text-slate-500'
-                  }`}
+                  className="p-2 border border-gray-300 rounded-md hover:bg-gray-100"
                 >
-                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  {copied ? <Check size={14} /> : <Copy size={14} />}
                 </button>
               </div>
-              <p className="text-xs text-slate-400 mt-2">
-                Save this ID to check back on your request status.
-              </p>
             </div>
 
             <button
               onClick={handleClose}
-              className="w-full bg-black text-white py-4 rounded-xl font-bold uppercase tracking-widest text-sm hover:bg-fuchsia-600 transition-colors"
+              className="w-full bg-gray-900 text-white py-3 rounded-lg text-sm font-medium hover:bg-black"
             >
-              Done
+              Close
             </button>
           </div>
         )}
