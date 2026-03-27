@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Activity, LayoutDashboard, Users, MessageSquare,
   Megaphone, Calendar, HandHeart, Star, LogOut, Menu, X,
-  Sun, Moon, BookOpen
+  Sun, Moon, BookOpen, Heart, Library
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AdminThemeProvider, useAdminTheme } from '../context/AdminThemeContext';
@@ -14,9 +14,11 @@ const NAV_ITEMS = [
   { icon: <MessageSquare size={18} />,   label: 'Messages',        route: '/admin/contacts' },
   { icon: <Megaphone size={18} />,       label: 'Announcements',   route: '/admin/announcements' },
   { icon: <Calendar size={18} />,        label: 'Events',          route: '/admin/events' },
-  { icon: <BookOpen size={18} />,        label: 'Sermons',         route: '/admin/sermons' },  // ✅ Added
+  { icon: <BookOpen size={18} />,        label: 'Sermons',         route: '/admin/sermons' },
   { icon: <HandHeart size={18} />,       label: 'Prayer Requests', route: '/admin/prayer-requests' },
   { icon: <Star size={18} />,            label: 'Testimonies',     route: '/admin/testimonies' },
+  { icon: <Heart size={18} />,           label: 'Donations',       route: '/admin/donations' },
+  { icon: <Library size={18} />,         label: 'Books',           route: '/admin/books' },
 ];
 
 const AdminLayoutInner: React.FC<{ children: React.ReactNode }> = ({ children }) => {

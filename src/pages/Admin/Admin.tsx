@@ -4,7 +4,10 @@ import {
   ResponsiveContainer, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts";
-import { Home, Users, MessageSquare, HeartHandshake, Sparkles, TrendingUp } from "lucide-react";
+import {
+  Home, Users, MessageSquare, HeartHandshake, Sparkles,
+  TrendingUp, Heart, Library
+} from "lucide-react";
 import { adminApi } from "../../api/adminApi";
 import type { DashboardStatsDto } from "../../types";
 
@@ -62,14 +65,11 @@ export default function AdminDashboard() {
       <div className="flex justify-between items-center">
         <div>
           <p className="text-gray-500 text-sm">{title}</p>
-
-          {/* Show skeleton shimmer while loading */}
           {isLoading ? (
             <div className="h-8 w-20 bg-gray-200 animate-pulse rounded mt-1" />
           ) : (
             <h2 className="text-2xl font-bold mt-1">{value ?? 0}</h2>
           )}
-
           <div className="flex items-center gap-1 text-green-600 text-xs mt-1">
             <TrendingUp size={14} />
             {growth}
@@ -129,8 +129,8 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* KPI CARDS — now using real backend fields */}
-      <div className="grid md:grid-cols-4 gap-6 mb-8">
+      {/* KPI CARDS — original 4 preserved, donations and books added */}
+      <div className="grid md:grid-cols-4 gap-6 mb-6">
         <StatCard
           icon={Users}
           title="Total Users"
@@ -157,7 +157,83 @@ export default function AdminDashboard() {
         />
       </div>
 
-      {/* GRAPH + SIDE PANEL */}
+      {/* SECOND ROW — Donations and Books */}
+      <div className="grid md:grid-cols-2 gap-6 mb-8">
+
+        {/* DONATIONS CARD */}
+        <div className="bg-white border rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <p className="text-gray-500 text-sm">Donations</p>
+              {isLoading ? (
+                <div className="h-8 w-32 bg-gray-200 animate-pulse rounded mt-1" />
+              ) : (
+                <h2 className="text-2xl font-bold mt-1">
+                  ₦{(stats?.totalAmountReceived ?? 0).toLocaleString()}
+                </h2>
+              )}
+              <div className="flex items-center gap-1 text-green-600 text-xs mt-1">
+                <TrendingUp size={14} />
+                Total amount received
+              </div>
+            </div>
+            <div className="bg-pink-50 p-3 rounded-xl">
+              <Heart className="text-pink-600" size={22} />
+            </div>
+          </div>
+          {!isLoading && stats && (
+            <div className="grid grid-cols-2 gap-2 text-center text-xs text-gray-500 mt-2">
+              <div className="bg-green-50 rounded-xl p-2">
+                <p className="text-lg font-bold text-green-700">{stats.completedDonations}</p>
+                <p>Completed</p>
+              </div>
+              <div className="bg-amber-50 rounded-xl p-2">
+                <p className="text-lg font-bold text-amber-600">{stats.pendingDonations}</p>
+                <p>Pending</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* BOOKS CARD */}
+        <div className="bg-white border rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <p className="text-gray-500 text-sm">Books</p>
+              {isLoading ? (
+                <div className="h-8 w-20 bg-gray-200 animate-pulse rounded mt-1" />
+              ) : (
+                <h2 className="text-2xl font-bold mt-1">{stats?.totalBooks ?? 0}</h2>
+              )}
+              <div className="flex items-center gap-1 text-green-600 text-xs mt-1">
+                <TrendingUp size={14} />
+                Total in library
+              </div>
+            </div>
+            <div className="bg-violet-50 p-3 rounded-xl">
+              <Library className="text-violet-600" size={22} />
+            </div>
+          </div>
+          {!isLoading && stats && (
+            <div className="grid grid-cols-3 gap-2 text-center text-xs text-gray-500 mt-2">
+              <div className="bg-gray-50 rounded-xl p-2">
+                <p className="text-lg font-bold text-gray-800">{stats.publishedBooks}</p>
+                <p>Published</p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-2">
+                <p className="text-lg font-bold text-gray-800">{stats.draftBooks}</p>
+                <p>Drafts</p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-2">
+                <p className="text-lg font-bold text-gray-800">{stats.featuredBooks}</p>
+                <p>Featured</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* GRAPH + SIDE PANEL — completely unchanged */}
       <div className="grid lg:grid-cols-3 gap-6">
 
         {/* GRAPH */}
@@ -174,7 +250,7 @@ export default function AdminDashboard() {
           </ResponsiveContainer>
         </div>
 
-        {/* SIDE STATISTICS */}
+        {/* SIDE STATISTICS — original stats preserved, donations and books added */}
         <div className="bg-white border rounded-2xl shadow-sm p-6 flex flex-col gap-6">
           <h2 className="text-lg font-semibold">Live Statistics</h2>
 
@@ -196,8 +272,20 @@ export default function AdminDashboard() {
             value={stats?.totalTestimonies}
             color="text-yellow-500"
           />
+          <SideStat
+            icon={Heart}
+            label="Donations"
+            value={stats?.completedDonations}
+            color="text-rose-500"
+          />
+          <SideStat
+            icon={Library}
+            label="Books"
+            value={stats?.totalBooks}
+            color="text-violet-600"
+          />
 
-          {/* Extra stats since you have them */}
+          {/* Extra mini stats grid — original preserved, books added */}
           {!isLoading && stats && (
             <div className="grid grid-cols-2 gap-2 text-center text-xs text-gray-500 mt-2">
               <div className="bg-gray-50 rounded-xl p-2">

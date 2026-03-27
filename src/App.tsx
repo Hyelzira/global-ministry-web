@@ -7,7 +7,7 @@ import AdminRoute from './components/guards/AdminRoute';
 import AdminLayout from './components/AdminLayout';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import BookStore from './components/BookStore';
+import BookStore from './pages/BookStore';
 
 // ─── MINISTRY PAGES ───────────────────────────────────────────────────────────
 import Home from './pages/Home';
@@ -39,6 +39,8 @@ import AdminSermons from './pages/Admin/AdminSermons';
 import AdminPrayerRequests from './pages/Admin/AdminPrayerRequests';
 import AdminTestimonies from './pages/Admin/AdminTestimonies';
 import AdminUsers from './pages/Admin/AdminUsers';
+import AdminBooks from './pages/Admin/AdminBooks';
+import AdminDonations from './pages/Admin/AdminDonations';
 
 // ─── SCROLL TO TOP ────────────────────────────────────────────────────────────
 const ScrollToTop = () => {
@@ -176,6 +178,8 @@ const App: React.FC = () => {
               <Route path="users" element={
                 <AdminLayout><AdminUsers /></AdminLayout>
               } />
+              <Route path="/admin/donations" element={<AdminLayout><AdminDonations /></AdminLayout>} />
+              <Route path="/admin/books"element={<AdminLayout><AdminBooks /></AdminLayout>} />
             </Route>
 
             {/* ── 404 ───────────────────────────────────────────────── */}
