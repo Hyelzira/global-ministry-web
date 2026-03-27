@@ -8,6 +8,7 @@ import { FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
 import { authApi } from '../../api/authApi';
 import { useAuth } from '../../context/AuthContext';
 import logo from '../../assets/flames.jpg';
+import sideImage from '../../assets/dadandmum.jpg'; 
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Please enter a valid email'),
@@ -24,20 +25,19 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Read the redirect path injected by Navbar and GivePage:
-  //   Navbar:   navigate('/login', { state: { from: '/give' } })
-  //   GivePage: navigate('/login', { state: { from: location.pathname }, replace: true })
-  // Falls back to '/' if the user landed here directly.
   const from = (location.state as { from?: string })?.from ?? '/';
 
-  // Show success toast if coming from email confirmation
   useEffect(() => {
     if (searchParams.get('confirmed') === 'true') {
-      toast.success('Email confirmed successfully! You can now login.');
+      toast.success('Email confirmed successfully. You can now sign in.');
     }
   }, []);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
 
@@ -48,59 +48,47 @@ const LoginPage = () => {
 
       if (response.data.isSuccess && response.data.data) {
         login(response.data.data);
-        toast.success(`Welcome back, ${response.data.data.firstName}!`);
+        toast.success(`Welcome back, ${response.data.data.firstName}`);
 
-        // Admin always goes to the dashboard — that takes priority over any
-        // "from" path, since admins shouldn't land on /give or other pages
-        // mid-flow after signing in.
         if (response.data.data.roles.includes('Admin')) {
           navigate('/admin', { replace: true });
         } else {
-          // Non-admin: honour the redirect path from Navbar / GivePage.
-          // replace: true keeps the browser history clean — pressing Back
-          // won't send the user to /login again.
           navigate(from, { replace: true });
         }
       } else {
         toast.error(response.data.message || 'Login failed');
       }
-    } catch (error: unknown) {
-      const err = error as {
-        response?: { data?: { message?: string; errors?: string } }
-      };
+    } catch (error: any) {
       const message =
-        err.response?.data?.errors ||
-        err.response?.data?.message ||
+        error?.response?.data?.errors ||
+        error?.response?.data?.message ||
         'Invalid email or password';
-      toast.error(String(message));
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
-
-          {/* Logo + Title */}
-          <div className="flex flex-col items-center mb-8">
-            <img
-              src={logo}
-              alt="Global Flame Ministries"
-              className="h-16 w-16 rounded-full object-cover mb-3 ring-4 ring-fuchsia-100"
-            />
-            <h1 className="text-2xl font-bold text-gray-900">Welcome Back</h1>
-            <p className="text-gray-500 text-sm mt-1">Sign in to your account</p>
+    <div className="min-h-screen flex bg-gray-50">
+      
+      {/* LEFT SIDE (FORM) */}
+      <div className="flex-1 flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-md">
+          
+          {/* Logo */}
+          <div className="mb-8">
+            <img src={logo} alt="Logo" className="h-12 w-12 rounded-full mb-4" />
+            <h1 className="text-2xl font-semibold text-gray-900">Sign in</h1>
+            <p className="text-sm text-gray-500 mt-1">
+              Access your account securely
+            </p>
           </div>
 
-          {/* Contextual hint when redirected from a protected route (e.g. /give) */}
+          {/* Redirect Notice */}
           {from && from !== '/' && (
-            <div className="mb-6 flex items-start gap-3 p-3 bg-fuchsia-50 rounded-xl border border-fuchsia-100">
-              <FiLock className="text-fuchsia-500 shrink-0 mt-0.5 w-4 h-4" />
-              <p className="text-xs text-fuchsia-700 font-medium leading-relaxed">
-                Sign in to continue. You'll be taken directly to your destination after logging in.
-              </p>
+            <div className="mb-6 p-3 bg-gray-100 border border-gray-200 rounded-lg text-sm text-gray-600">
+              Please sign in to continue.
             </div>
           )}
 
@@ -108,116 +96,100 @@ const LoginPage = () => {
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Email Address
-              </label>
-              <div className="relative">
-                <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <label className="text-sm font-medium text-gray-700">Email</label>
+              <div className="relative mt-1">
+                <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                   {...register('email')}
                   type="email"
                   placeholder="you@example.com"
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-fuchsia-500 focus:border-transparent transition-all bg-white placeholder-gray-400 ${
+                  className={`w-full pl-10 pr-3 py-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 ${
                     errors.email ? 'border-red-400' : 'border-gray-300'
                   }`}
                 />
               </div>
               {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+                <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>
               )}
             </div>
 
             {/* Password */}
             <div>
-              <div className="flex justify-between items-center mb-1">
-                <label className="block text-sm font-semibold text-gray-700">
-                  Password
-                </label>
-                <Link
-                  to="/forgot-password"
-                  className="text-sm text-fuchsia-600 hover:text-fuchsia-800 font-medium"
-                >
-                  Forgot password?
+              <div className="flex justify-between text-sm">
+                <label className="font-medium text-gray-700">Password</label>
+                <Link to="/forgot-password" className="text-gray-600 hover:underline">
+                  Forgot?
                 </Link>
               </div>
-              <div className="relative">
-                <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+
+              <div className="relative mt-1">
+                <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                   {...register('password')}
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter your password"
-                  className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-fuchsia-500 focus:border-transparent transition-all bg-white placeholder-gray-400 ${
+                  placeholder="Enter password"
+                  className={`w-full pl-10 pr-10 py-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 ${
                     errors.password ? 'border-red-400' : 'border-gray-300'
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
                 >
-                  {showPassword
-                    ? <FiEyeOff className="w-5 h-5" />
-                    : <FiEye className="w-5 h-5" />
-                  }
+                  {showPassword ? <FiEyeOff /> : <FiEye />}
                 </button>
               </div>
+
               {errors.password && (
-                <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+                <p className="text-xs text-red-500 mt-1">{errors.password.message}</p>
               )}
             </div>
 
-            {/* Submit */}
+            {/* Button */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-fuchsia-700 hover:bg-purple-800 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
+              className="w-full bg-gray-900 text-white py-3 rounded-lg text-sm font-medium hover:bg-black transition flex justify-center items-center"
             >
-              {isLoading ? (
-                <>
-                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Signing in...
-                </>
-              ) : (
-                'Sign In'
-              )}
+              {isLoading ? 'Signing in...' : 'Sign in'}
             </button>
           </form>
 
-          <div className="flex items-center gap-3 my-6">
-            <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-gray-400 text-sm">or</span>
-            <div className="flex-1 h-px bg-gray-200" />
-          </div>
-
-          <p className="text-center text-sm text-gray-500 mb-4">
-            Didn't receive confirmation email?{' '}
-            <Link
-              to="/resend-confirmation"
-              className="text-fuchsia-600 hover:text-fuchsia-800 font-medium"
-            >
-              Resend it
-            </Link>
-          </p>
-
-          <p className="text-center text-sm text-gray-500">
-            Don't have an account?{' '}
-            <Link
-              to="/register"
-              className="text-fuchsia-600 hover:text-fuchsia-800 font-semibold"
-            >
+          {/* Footer */}
+          <p className="text-sm text-gray-500 text-center mt-6">
+            Don’t have an account?{' '}
+            <Link to="/register" className="text-gray-900 font-medium hover:underline">
               Create one
             </Link>
           </p>
-        </div>
 
-        <p className="text-center mt-6 text-sm text-gray-400">
-          <Link to="/" className="hover:text-fuchsia-600 transition">
-            ← Back to Home
-          </Link>
-        </p>
+          <p className="text-sm text-gray-400 text-center mt-4">
+            <Link to="/">← Back to Home</Link>
+          </p>
+        </div>
+      </div>
+
+      {/* RIGHT SIDE (IMAGE PANEL) */}
+      <div className="hidden lg:block flex-1 relative">
+        <img
+          src={sideImage}
+          alt="Visual"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-black/40" />
+
+        {/* Text Content */}
+        <div className="absolute bottom-10 left-10 right-10 text-white">
+          <h2 className="text-2xl font-semibold mb-2">
+            Empowering the Next Generation
+          </h2>
+          <p className="text-sm text-gray-200">
+            Connect, grow, and be part of a thriving community making impact.
+          </p>
+        </div>
       </div>
     </div>
   );
