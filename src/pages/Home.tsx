@@ -12,11 +12,11 @@ import PrayerRequestModal from '../components/PrayerRequestModal';
 import TestimonyModal from '../components/TestimonyModal';
 
 const Home: React.FC = () => {
-  const [latestSermons, setLatestSermons]               = useState<SermonDto[]>([]);
-  const [upcomingEvents, setUpcomingEvents]             = useState<EventDto[]>([]);
-  const [latestAnnouncements, setLatestAnnouncements]   = useState<AnnouncementDto[]>([]);
-  const [showPrayerModal, setShowPrayerModal]           = useState(false);
-  const [showTestimonyModal, setShowTestimonyModal]     = useState(false);
+  const [latestSermons, setLatestSermons]             = useState<SermonDto[]>([]);
+  const [upcomingEvents, setUpcomingEvents]           = useState<EventDto[]>([]);
+  const [latestAnnouncements, setLatestAnnouncements] = useState<AnnouncementDto[]>([]);
+  const [showPrayerModal, setShowPrayerModal]         = useState(false);
+  const [showTestimonyModal, setShowTestimonyModal]   = useState(false);
 
   useEffect(() => {
     sermonApi.getAll({ pageSize: 3 }).then(res => {
@@ -49,10 +49,10 @@ const Home: React.FC = () => {
         <div className="bg-white shadow-2xl rounded-xl grid grid-cols-3 md:grid-cols-6 divide-x divide-slate-100 border border-slate-100 overflow-hidden">
 
           {[
-            { icon: <Play className="w-4 h-4 text-brand-500" />,     label: 'Watch Live', link: '/watch' },
-            { icon: <Calendar className="w-4 h-4 text-brand-500" />, label: 'Calendar',   link: '/events' },
+            { icon: <Play className="w-4 h-4 text-brand-500" />,     label: 'Watch Live', link: '/sermons' },
+            { icon: <Calendar className="w-4 h-4 text-brand-500" />, label: 'Events',     link: '/events'  },
             { icon: <MapPin className="w-4 h-4 text-brand-500" />,   label: 'Find Us',    link: '/contact' },
-            { icon: <Heart className="w-4 h-4 text-brand-500" />,    label: 'Give',       link: '/give' },
+            { icon: <Heart className="w-4 h-4 text-brand-500" />,    label: 'Give',       link: '/give'    },
           ].map((item, i) => (
             <Link
               key={i}
@@ -212,9 +212,11 @@ const Home: React.FC = () => {
               Join us every Tuesday for an atmosphere of worship that transcends the ordinary.
             </p>
             <div className="flex items-center gap-4">
-              <button className="px-8 py-4 bg-white text-slate-900 font-bold uppercase tracking-widest text-sm hover:bg-brand-600 hover:text-gray-600 transition-all shadow-xl">
+              <Link
+                to="/sermons"
+                className="px-8 py-4 bg-white text-slate-900 font-bold uppercase tracking-widest text-sm hover:bg-brand-600 hover:text-gray-600 transition-all shadow-xl">
                 Watch Our Story
-              </button>
+              </Link>
               <button
                 onClick={() => setShowPrayerModal(true)}
                 className="px-8 py-4 bg-fuchsia-600 text-white font-bold uppercase tracking-widest text-sm hover:bg-fuchsia-500 transition-all shadow-xl flex items-center gap-2"
@@ -310,7 +312,6 @@ const Home: React.FC = () => {
       {/* ── Modals ────────────────────────────────────────────────────── */}
       <PrayerRequestModal isOpen={showPrayerModal} onClose={() => setShowPrayerModal(false)} />
       <TestimonyModal isOpen={showTestimonyModal} onClose={() => setShowTestimonyModal(false)} />
-
     </div>
   );
 };

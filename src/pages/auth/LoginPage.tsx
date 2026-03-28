@@ -8,7 +8,6 @@ import { FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
 import { authApi } from '../../api/authApi';
 import { useAuth } from '../../context/AuthContext';
 import logo from '../../assets/flames.jpg';
-import sideImage from '../../assets/dadandmum.jpg'; 
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Please enter a valid email'),
@@ -45,11 +44,9 @@ const LoginPage = () => {
     setIsLoading(true);
     try {
       const response = await authApi.login(data);
-
       if (response.data.isSuccess && response.data.data) {
         login(response.data.data);
         toast.success(`Welcome back, ${response.data.data.firstName}`);
-
         if (response.data.data.roles.includes('Admin')) {
           navigate('/admin', { replace: true });
         } else {
@@ -70,24 +67,42 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
-      
-      {/* LEFT SIDE (FORM) */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-md">
-          
-          {/* Logo */}
-          <div className="mb-8">
-            <img src={logo} alt="Logo" className="h-12 w-12 rounded-full mb-4" />
-            <h1 className="text-2xl font-semibold text-gray-900">Sign in</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Access your account securely
-            </p>
+    <div className="min-h-screen bg-white flex items-center justify-center px-4 py-16">
+
+      {/* Subtle background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-32 -right-32 w-96 h-96 bg-fuchsia-50 rounded-full blur-3xl opacity-60" />
+        <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-purple-50 rounded-full blur-3xl opacity-60" />
+      </div>
+
+      <div className="relative w-full max-w-md">
+
+        {/* Logo + Ministry Name */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-fuchsia-600 to-purple-700 shadow-lg mb-4">
+            <img
+              src={logo}
+              alt="Global Flame Ministries"
+              className="w-11 h-11 rounded-xl object-cover"
+            />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+            Global Flame Ministry
+          </h1>
+          <p className="text-sm text-gray-400 mt-1">Member Portal</p>
+        </div>
+
+        {/* Card */}
+        <div className="bg-white border border-gray-100 rounded-3xl shadow-xl shadow-gray-100/80 px-8 py-10">
+
+          <div className="mb-7">
+            <h2 className="text-xl font-semibold text-gray-900">Welcome back</h2>
+            <p className="text-sm text-gray-400 mt-1">Sign in to your account to continue</p>
           </div>
 
           {/* Redirect Notice */}
           {from && from !== '/' && (
-            <div className="mb-6 p-3 bg-gray-100 border border-gray-200 rounded-lg text-sm text-gray-600">
+            <div className="mb-5 px-4 py-3 bg-fuchsia-50 border border-fuchsia-100 rounded-xl text-sm text-fuchsia-700">
               Please sign in to continue.
             </div>
           )}
@@ -96,100 +111,114 @@ const LoginPage = () => {
 
             {/* Email */}
             <div>
-              <label className="text-sm font-medium text-gray-700">Email</label>
-              <div className="relative mt-1">
-                <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                Email Address
+              </label>
+              <div className="relative">
+                <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4" />
                 <input
                   {...register('email')}
                   type="email"
                   placeholder="you@example.com"
-                  className={`w-full pl-10 pr-3 py-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 ${
-                    errors.email ? 'border-red-400' : 'border-gray-300'
-                  }`}
+                  className={`w-full pl-11 pr-4 py-3.5 border rounded-xl text-sm text-gray-900 placeholder-gray-300
+                    focus:outline-none focus:ring-2 focus:ring-fuchsia-500/30 focus:border-fuchsia-400 transition-all
+                    ${errors.email ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50/50'}`}
                 />
               </div>
               {errors.email && (
-                <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>
+                <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
+                  <span>⚠</span> {errors.email.message}
+                </p>
               )}
             </div>
 
             {/* Password */}
             <div>
-              <div className="flex justify-between text-sm">
-                <label className="font-medium text-gray-700">Password</label>
-                <Link to="/forgot-password" className="text-gray-600 hover:underline">
-                  Forgot?
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  Password
+                </label>
+                <Link
+                  to="/forgot-password"
+                  className="text-xs text-fuchsia-600 hover:text-fuchsia-700 font-medium transition-colors"
+                >
+                  Forgot password?
                 </Link>
               </div>
-
-              <div className="relative mt-1">
-                <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <div className="relative">
+                <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4" />
                 <input
                   {...register('password')}
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter password"
-                  className={`w-full pl-10 pr-10 py-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 ${
-                    errors.password ? 'border-red-400' : 'border-gray-300'
-                  }`}
+                  placeholder="Enter your password"
+                  className={`w-full pl-11 pr-12 py-3.5 border rounded-xl text-sm text-gray-900 placeholder-gray-300
+                    focus:outline-none focus:ring-2 focus:ring-fuchsia-500/30 focus:border-fuchsia-400 transition-all
+                    ${errors.password ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50/50'}`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors"
                 >
-                  {showPassword ? <FiEyeOff /> : <FiEye />}
+                  {showPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
                 </button>
               </div>
-
               {errors.password && (
-                <p className="text-xs text-red-500 mt-1">{errors.password.message}</p>
+                <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
+                  <span>⚠</span> {errors.password.message}
+                </p>
               )}
             </div>
 
-            {/* Button */}
+            {/* Submit */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gray-900 text-white py-3 rounded-lg text-sm font-medium hover:bg-black transition flex justify-center items-center"
+              className="w-full bg-gradient-to-r from-fuchsia-600 to-purple-700 hover:from-fuchsia-500 hover:to-purple-600
+                text-white font-semibold py-3.5 rounded-xl text-sm shadow-lg shadow-fuchsia-200
+                transition-all duration-200 hover:shadow-fuchsia-300 hover:scale-[1.01]
+                disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100
+                flex items-center justify-center gap-2 mt-2"
             >
-              {isLoading ? 'Signing in...' : 'Sign in'}
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.25" />
+                    <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.3 0 0 5.3 0 12h4z" opacity="0.75" />
+                  </svg>
+                  Signing in...
+                </>
+              ) : (
+                'Sign In'
+              )}
             </button>
           </form>
 
-          {/* Footer */}
-          <p className="text-sm text-gray-500 text-center mt-6">
-            Don’t have an account?{' '}
-            <Link to="/register" className="text-gray-900 font-medium hover:underline">
+          {/* Divider */}
+          <div className="flex items-center gap-3 my-6">
+            <div className="flex-1 h-px bg-gray-100" />
+            <span className="text-xs text-gray-300 font-medium">OR</span>
+            <div className="flex-1 h-px bg-gray-100" />
+          </div>
+
+          {/* Register link */}
+          <p className="text-sm text-gray-500 text-center">
+            Don't have an account?{' '}
+            <Link
+              to="/register"
+              className="text-fuchsia-600 font-semibold hover:text-fuchsia-700 transition-colors"
+            >
               Create one
             </Link>
           </p>
-
-          <p className="text-sm text-gray-400 text-center mt-4">
-            <Link to="/">← Back to Home</Link>
-          </p>
         </div>
-      </div>
 
-      {/* RIGHT SIDE (IMAGE PANEL) */}
-      <div className="hidden lg:block flex-1 relative">
-        <img
-          src={sideImage}
-          alt="Visual"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-black/40" />
-
-        {/* Text Content */}
-        <div className="absolute bottom-10 left-10 right-10 text-white">
-          <h2 className="text-2xl font-semibold mb-2">
-            Empowering the Next Generation
-          </h2>
-          <p className="text-sm text-gray-200">
-            Connect, grow, and be part of a thriving community making impact.
-          </p>
-        </div>
+        {/* Back to home */}
+        <p className="text-center mt-6 text-sm text-gray-400">
+          <Link to="/" className="hover:text-fuchsia-600 transition-colors inline-flex items-center gap-1">
+            ← Back to Home
+          </Link>
+        </p>
       </div>
     </div>
   );

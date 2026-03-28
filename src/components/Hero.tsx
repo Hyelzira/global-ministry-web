@@ -2,24 +2,21 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { PlayCircle, ArrowRight } from 'lucide-react';
 import auditorium from '../assets/auditorium.jpg';
+import { useAuth } from '../context/AuthContext';
 
 const Hero: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
 
   const handleSignUp = (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Build query string with whatever they filled in
-    // Register page will read these and pre-fill the form
     const params = new URLSearchParams();
     if (firstName) params.set('firstName', firstName);
-    if (lastName) params.set('lastName', lastName);
-    if (email) params.set('email', email);
-
-    // Redirect to register page with pre-filled data
+    if (lastName)  params.set('lastName', lastName);
+    if (email)     params.set('email', email);
     navigate(`/register?${params.toString()}`);
   };
 
@@ -77,55 +74,57 @@ const Hero: React.FC = () => {
         </div>
       </div>
 
-      {/* Newsletter / Quick Register Section */}
-      <section className="bg-slate-400/40 py-12 px-4 border-t border-white/10 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-serif text-white mb-2">
-            Sign up to receive life changing hope and encouragement!
-          </h2>
-          <p className="text-white/70 text-sm mb-8">
-            Join our community today — it only takes a minute.
-          </p>
+      {/* Newsletter / Quick Register — hidden when user is already logged in */}
+      {!user && (
+        <section className="bg-slate-400/40 py-12 px-4 border-t border-white/10 backdrop-blur-md">
+          <div className="max-w-7xl mx-auto text-center">
+            <h2 className="text-2xl md:text-3xl font-serif text-white mb-2">
+              Sign up to receive life changing hope and encouragement!
+            </h2>
+            <p className="text-white/70 text-sm mb-8">
+              Join our community today — it only takes a minute.
+            </p>
 
-          <form
-            onSubmit={handleSignUp}
-            className="flex flex-col md:flex-row items-center justify-center gap-4 max-w-5xl mx-auto"
-          >
-            <input
-              type="text"
-              placeholder="First Name"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              className="w-full md:flex-1 bg-white rounded-sm py-3 px-4 text-slate-900 focus:ring-2 focus:ring-fuchsia-400 outline-none transition-all shadow-sm"
-            />
-            <input
-              type="text"
-              placeholder="Last Name"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              className="w-full md:flex-1 bg-white rounded-sm py-3 px-4 text-slate-900 focus:ring-2 focus:ring-fuchsia-400 outline-none transition-all shadow-sm"
-            />
-            <input
-              type="email"
-              placeholder="Email Address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full md:flex-1 bg-white rounded-sm py-3 px-4 text-slate-900 focus:ring-2 focus:ring-fuchsia-400 outline-none transition-all shadow-sm"
-            />
-            <button
-              type="submit"
-              className="w-full md:w-auto bg-[#0071bc] hover:bg-[#005a96] text-white font-bold uppercase tracking-widest px-10 py-3 rounded-sm shadow-lg transition-colors"
+            <form
+              onSubmit={handleSignUp}
+              className="flex flex-col md:flex-row items-center justify-center gap-4 max-w-5xl mx-auto"
             >
-              Sign Up
-            </button>
-          </form>
+              <input
+                type="text"
+                placeholder="First Name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="w-full md:flex-1 bg-white rounded-sm py-3 px-4 text-slate-900 focus:ring-2 focus:ring-fuchsia-400 outline-none transition-all shadow-sm"
+              />
+              <input
+                type="text"
+                placeholder="Last Name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="w-full md:flex-1 bg-white rounded-sm py-3 px-4 text-slate-900 focus:ring-2 focus:ring-fuchsia-400 outline-none transition-all shadow-sm"
+              />
+              <input
+                type="email"
+                placeholder="Email Address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full md:flex-1 bg-white rounded-sm py-3 px-4 text-slate-900 focus:ring-2 focus:ring-fuchsia-400 outline-none transition-all shadow-sm"
+              />
+              <button
+                type="submit"
+                className="w-full md:w-auto bg-[#0071bc] hover:bg-[#005a96] text-white font-bold uppercase tracking-widest px-10 py-3 rounded-sm shadow-lg transition-colors"
+              >
+                Sign Up
+              </button>
+            </form>
 
-          <p className="mt-6 text-xs text-white/70 max-w-3xl mx-auto leading-relaxed">
-            *By submitting this form you will be taken to our registration page to complete your account setup.
-            We respect your privacy and will never share your information.
-          </p>
-        </div>
-      </section>
+            <p className="mt-6 text-xs text-white/70 max-w-3xl mx-auto leading-relaxed">
+              *By submitting this form you will be taken to our registration page to complete your account setup.
+              We respect your privacy and will never share your information.
+            </p>
+          </div>
+        </section>
+      )}
     </>
   );
 };

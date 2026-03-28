@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Activity, LayoutDashboard, Users, MessageSquare,
   Megaphone, Calendar, HandHeart, Star, LogOut, Menu, X,
-  Sun, Moon, BookOpen, Heart, Library
+  Sun, Moon, BookOpen, Heart, Library, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AdminThemeProvider, useAdminTheme } from '../context/AdminThemeContext';
@@ -22,11 +22,12 @@ const NAV_ITEMS = [
 ];
 
 const AdminLayoutInner: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const navigate              = useNavigate();
-  const location              = useLocation();
-  const { logout }            = useAuth();
-  const { isDark, toggleTheme } = useAdminTheme();
-  const [isOpen, setIsOpen]   = useState(false);
+  const navigate                        = useNavigate();
+  const location                        = useLocation();
+  const { logout }                      = useAuth();
+  const { isDark, toggleTheme }         = useAdminTheme();
+  const [isOpen, setIsOpen]             = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const isActive = (route: string) =>
     route === '/admin'
@@ -41,8 +42,9 @@ const AdminLayoutInner: React.FC<{ children: React.ReactNode }> = ({ children })
   const topBar    = isDark ? 'bg-[#0d0d0d] border-white/5' : 'bg-white border-slate-200';
 
   return (
-    <div className={`flex h-screen ${overlayBg}`}>
+    <div className={`flex h-screen overflow-hidden ${overlayBg}`}>
 
+      {/* Mobile backdrop */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/60 z-30 lg:hidden"
@@ -50,70 +52,135 @@ const AdminLayoutInner: React.FC<{ children: React.ReactNode }> = ({ children })
         />
       )}
 
-      {/* Sidebar */}
-      <aside className={`
-        fixed lg:static inset-y-0 left-0 z-40
-        w-64 flex flex-col border-r
-        transition-transform duration-300
-        ${sidebarBg}
-        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0
-      `}>
-        <div className="p-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 bg-fuchsia-600 rounded-lg flex items-center justify-center">
-              <Activity size={18} className="text-white" />
-            </div>
-            <h1 className={`font-black uppercase ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              GFM <span className="text-fuchsia-600">Core</span>
-            </h1>
+      {/* ── SIDEBAR ─────────────────────────────────────────────────── */}
+      <aside
+        style={{ width: sidebarCollapsed ? '72px' : '256px' }}
+        className={`
+          fixed lg:static inset-y-0 left-0 z-40
+          flex flex-col border-r shrink-0
+          transition-all duration-300 overflow-hidden
+          ${sidebarBg}
+          ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+          lg:translate-x-0
+        `}
+      >
+        {/* ── SIDEBAR HEADER ───────────────────────────────────────── */}
+        <div className={`
+          flex items-center border-b p-4 h-16
+          ${isDark ? 'border-white/5' : 'border-slate-200'}
+        `}>
+          {/* Logo icon — always visible */}
+          <div className="h-8 w-8 shrink-0 bg-fuchsia-600 rounded-lg flex items-center justify-center">
+            <Activity size={18} className="text-white" />
           </div>
-          <button
-            onClick={() => setIsOpen(false)}
-            className="lg:hidden p-1.5 rounded-lg hover:bg-white/10 text-zinc-400"
-          >
-            <X size={18} />
-          </button>
+
+          {/* GFM Core text — hidden on desktop when collapsed, always shown on mobile */}
+          <h1 className={`
+            font-black uppercase whitespace-nowrap ml-3 flex-1
+            ${isDark ? 'text-white' : 'text-slate-900'}
+            ${sidebarCollapsed ? 'lg:hidden' : 'block'}
+          `}>
+            GFM <span className="text-fuchsia-600">Core</span>
+          </h1>
+
+          {/* Right controls — always visible */}
+          <div className={`
+            flex items-center gap-1 shrink-0
+            ${sidebarCollapsed ? 'lg:hidden' : 'flex'}
+          `}>
+            {/* Theme toggle — desktop only */}
+            <button
+              onClick={toggleTheme}
+              className={`
+                p-1.5 rounded-lg transition-colors hidden lg:flex
+                ${isDark ? 'hover:bg-white/10' : 'hover:bg-slate-100'}
+              `}
+              title={isDark ? 'Light mode' : 'Dark mode'}
+            >
+              {isDark
+                ? <Sun size={16} className="text-amber-400" />
+                : <Moon size={16} className="text-slate-500" />
+              }
+            </button>
+
+            {/* Mobile close button */}
+            <button
+              onClick={() => setIsOpen(false)}
+              className="lg:hidden p-1.5 rounded-lg hover:bg-white/10 text-zinc-400"
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
-        <nav className="px-3 space-y-1 flex-1 overflow-y-auto">
+        {/* ── COLLAPSE TOGGLE — desktop only, always visible ───────── */}
+        <button
+          onClick={() => setSidebarCollapsed(p => !p)}
+          className={`
+            hidden lg:flex items-center justify-center
+            mx-auto mt-3 p-1.5 rounded-lg transition-colors
+            ${isDark
+              ? 'hover:bg-white/10 text-zinc-400 hover:text-white'
+              : 'hover:bg-slate-100 text-slate-400 hover:text-slate-700'
+            }
+          `}
+          title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          {sidebarCollapsed
+            ? <ChevronRight size={16} />
+            : <ChevronLeft size={16} />
+          }
+        </button>
+
+        {/* ── NAV ITEMS ─────────────────────────────────────────────── */}
+        <nav className="px-2 py-2 space-y-1 flex-1 overflow-y-auto overflow-x-hidden">
           {NAV_ITEMS.map(item => (
             <button
               key={item.route}
               onClick={() => { navigate(item.route); setIsOpen(false); }}
-              className={`flex items-center gap-3 w-full p-3 rounded-xl transition-colors text-sm ${
-                isActive(item.route)
-                  ? 'bg-fuchsia-600 text-white'
-                  : navText
-              }`}
+              title={sidebarCollapsed ? item.label : undefined}
+              className={`
+                flex items-center w-full p-3 rounded-xl transition-colors text-sm
+                ${isActive(item.route) ? 'bg-fuchsia-600 text-white' : navText}
+              `}
             >
-              {item.icon} {item.label}
+              <span className="shrink-0">{item.icon}</span>
+              {/* Label: hidden on desktop when collapsed, always shown on mobile */}
+              <span className={`
+                ml-3 whitespace-nowrap
+                ${sidebarCollapsed ? 'lg:hidden' : 'block'}
+              `}>
+                {item.label}
+              </span>
             </button>
           ))}
         </nav>
 
-        <div className={`p-4 border-t ${isDark ? 'border-white/5' : 'border-slate-200'}`}>
+        {/* ── LOGOUT ────────────────────────────────────────────────── */}
+        <div className={`p-3 border-t ${isDark ? 'border-white/5' : 'border-slate-200'}`}>
           <button
             onClick={logout}
-            className="flex items-center gap-3 w-full p-3 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors text-sm"
+            title={sidebarCollapsed ? 'Logout' : undefined}
+            className={`flex items-center w-full p-3 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors text-sm`}
           >
-            <LogOut size={18} /> Logout
+            <LogOut size={18} className="shrink-0" />
+            <span className={`ml-3 whitespace-nowrap ${sidebarCollapsed ? 'lg:hidden' : 'block'}`}>
+              Logout
+            </span>
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      {/* ── MAIN CONTENT ────────────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
 
-        {/* Mobile Top Bar */}
+        {/* Mobile top bar */}
         <div className={`flex items-center justify-between px-6 py-4 border-b lg:hidden ${topBar}`}>
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsOpen(true)}
               className={`p-2 rounded-lg transition-colors ${
-                isDark
-                  ? 'bg-white/5 hover:bg-white/10'
-                  : 'bg-slate-100 hover:bg-slate-200'
+                isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-slate-100 hover:bg-slate-200'
               }`}
             >
               <Menu size={20} className={isDark ? 'text-white' : 'text-slate-700'} />
@@ -127,12 +194,12 @@ const AdminLayoutInner: React.FC<{ children: React.ReactNode }> = ({ children })
               </span>
             </div>
           </div>
+
+          {/* Theme toggle — mobile */}
           <button
             onClick={toggleTheme}
             className={`p-2 rounded-lg transition-colors ${
-              isDark
-                ? 'bg-white/5 hover:bg-white/10'
-                : 'bg-slate-100 hover:bg-slate-200'
+              isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-slate-100 hover:bg-slate-200'
             }`}
           >
             {isDark
@@ -142,6 +209,7 @@ const AdminLayoutInner: React.FC<{ children: React.ReactNode }> = ({ children })
           </button>
         </div>
 
+        {/* Page content */}
         <div className="flex-1 overflow-y-auto">
           {children}
         </div>
